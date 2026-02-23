@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     q: "Os produtos têm garantia?",
-    a: "Sim! Todos os produtos possuem garantia contra defeitos de fabricação. Além disso, oferecemos nossa Garantia Blindada de 7 dias para trocas ou devoluções."
+    a: "Sim! Todos os produtos são rigorosamente testados antes do envio. Caso algum item apresente problema durante os testes, ele é imediatamente retirado do pedido e o valor é estornado para você."
   }
 ];
 

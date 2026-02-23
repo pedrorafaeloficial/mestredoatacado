@@ -17,12 +17,12 @@ export function Guarantee() {
           </div>
           
           <h2 className="font-display text-3xl font-black text-zinc-900 mt-6 mb-4">
-            Garantia Blindada
+            Garantia Blindada de Qualidade
           </h2>
           <p className="text-lg text-zinc-600 max-w-2xl mx-auto">
-            Testamos todos os Produtos antes do Envio. Os produtos que dão problema serão retirados e Estornados.
+            Nosso compromisso é com o sucesso do seu negócio. Por isso, testamos rigorosamente todos os produtos antes do envio. Caso algum item apresente qualquer problema nos testes, ele será imediatamente retirado do seu pedido e o valor correspondente será estornado.
           </p>
-          <p className="mt-6 font-bold text-zinc-900">
+          <p className="mt-6 font-bold text-zinc-900 text-xl">
             O risco é todo nosso. Você só tem a lucrar.
           </p>
         </motion.div>
