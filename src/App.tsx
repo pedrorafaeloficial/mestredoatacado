@@ -9,6 +9,7 @@ import { Guarantee } from './components/Guarantee';
 import { CTA } from './components/CTA';
 import { FAQ } from './components/FAQ';
 import { Footer } from './components/Footer';
+import { WhatsAppButton } from './components/WhatsAppButton';
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
       <CTA />
       <FAQ />
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }
