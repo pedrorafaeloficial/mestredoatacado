@@ -61,9 +61,9 @@ export function Hero() {
           >
             <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
               <img 
-                src="/assets/hero-stock.jpg" 
+                src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop" 
                 alt="Estoque cheio de produtos" 
-                className="w-full h-auto object-cover opacity-80"
+                className="w-full h-[600px] object-cover opacity-80"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
               
