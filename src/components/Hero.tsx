@@ -3,7 +3,7 @@ import { ArrowRight, TrendingUp, ShieldCheck, Package } from 'lucide-react';
 
 export function Hero() {
   return (
-    <section className="relative bg-zinc-950 text-white overflow-hidden pt-64 pb-32 lg:pt-72 lg:pb-40">
+    <section className="relative bg-zinc-950 text-white overflow-hidden pt-40 pb-32 lg:pt-48 lg:pb-40">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[20%] -right-[10%] w-[70%] h-[70%] rounded-full bg-amber-500/10 blur-[120px]" />
