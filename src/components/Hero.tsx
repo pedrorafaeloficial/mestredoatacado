@@ -61,7 +61,7 @@ export function Hero() {
           >
             <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
               <img 
-                src="https://drive.google.com/uc?export=view&id=1SlKs20n1S4ZK58oRatsgp7kEUwl6SRK_" 
+                src="/assets/hero-stock.jpg" 
                 alt="Estoque cheio de produtos" 
                 className="w-full h-auto object-cover opacity-80"
               />
