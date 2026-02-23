@@ -36,10 +36,9 @@ export function Problem() {
             transition={{ duration: 0.6 }}
           >
             <img 
-              src="https://picsum.photos/seed/stress/600/600" 
-              alt="Lojista estressado" 
+              src="https://images.unsplash.com/photo-1556740758-90de374c12ad?q=80&w=1000&auto=format&fit=crop" 
+              alt="Lojista conferindo estoque" 
               className="rounded-2xl shadow-xl grayscale hover:grayscale-0 transition-all duration-500"
-              referrerPolicy="no-referrer"
             />
           </motion.div>
 

@@ -1,8 +1,10 @@
+import logo from '../assets/mestreB.png';
+
 export function Logo({ className = "" }: { className?: string }) {
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
       <img 
-        src={`${import.meta.env.BASE_URL}assets/mestreB.png`}
+        src={logo}
         alt="Mestre do Atacado" 
         className="w-auto h-auto max-h-[140px] object-contain"
       />
