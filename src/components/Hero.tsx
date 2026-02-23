@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { ArrowRight, TrendingUp, ShieldCheck, Package } from 'lucide-react';
+import estoqueImg from '../assets/estoque.jpg';
 
 export function Hero() {
   return (
@@ -61,7 +62,7 @@ export function Hero() {
           >
             <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
               <img 
-                src="/assets/hero-stock.jpg" 
+                src={estoqueImg} 
                 alt="Estoque cheio de produtos" 
                 className="w-full h-auto object-cover opacity-80"
               />
