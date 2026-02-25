@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
-import { Plus, Pencil, Trash, Image as ImageIcon, X, ListPlus, Search, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash, Image as ImageIcon, X, ListPlus, Search, Upload, LogOut } from 'lucide-react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ProductSchema, CategorySchema, Product, Category } from '../../types/store';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEditing, setIsEditing, isCreating, setIsCreating }: any) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -476,12 +477,22 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'products' | 'categories'>('products');
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-zinc-50 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-zinc-900">Painel Administrativo</h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold text-zinc-900">Painel Administrativo</h1>
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200 rounded-lg transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sair
+            </button>
+          </div>
           <div className="flex gap-2 bg-white p-1 rounded-lg border border-zinc-200">
             <button
               onClick={() => { setActiveTab('products'); setIsEditing(null); setIsCreating(false); }}
