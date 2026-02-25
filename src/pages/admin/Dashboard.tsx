@@ -142,7 +142,7 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
                 <input 
                   type="number" 
                   step="0.01" 
-                  {...register('price', { valueAsNumber: true })} 
+                  {...register('price')} 
                   className="w-full px-3 py-2 border rounded-lg" 
                 />
                 {errors.price && <span className="text-red-500 text-xs">{errors.price.message}</span>}
@@ -163,18 +163,20 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
                 <label className="block text-sm font-medium text-zinc-700 mb-1">Qtd. Mínima</label>
                 <input 
                   type="number" 
-                  {...register('minQuantity', { valueAsNumber: true })} 
+                  {...register('minQuantity')} 
                   className="w-full px-3 py-2 border rounded-lg" 
                 />
+                {errors.minQuantity && <span className="text-red-500 text-xs">{errors.minQuantity.message}</span>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-1">Estoque Atual</label>
                 <input 
                   type="number" 
-                  {...register('stock', { valueAsNumber: true })} 
+                  {...register('stock')} 
                   className="w-full px-3 py-2 border rounded-lg" 
                 />
+                {errors.stock && <span className="text-red-500 text-xs">{errors.stock.message}</span>}
               </div>
             </div>
 
@@ -297,6 +299,11 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
+              {Object.keys(errors).length > 0 && (
+                <div className="text-red-500 text-sm flex items-center mr-auto font-medium">
+                  Preencha os campos obrigatórios corretamente.
+                </div>
+              )}
               <button 
                 type="button" 
                 onClick={() => { setIsCreating(false); setIsEditing(null); }}
