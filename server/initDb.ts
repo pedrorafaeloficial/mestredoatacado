@@ -46,34 +46,13 @@ async function initDb() {
       }
     }
 
-    const { rows: productRows } = await client.query('SELECT COUNT(*) FROM products');
-    if (parseInt(productRows[0].count) === 0) {
-      console.log('Seeding products...');
-      for (const product of INITIAL_PRODUCTS) {
-        await client.query(
-          `INSERT INTO products (
-            id, sku, name, description, price, category_id, images, 
-            min_quantity, stock, featured, specifications, reviews, variations
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-          [
-            product.id,
-            product.sku,
-            product.name,
-            product.description,
-            product.price,
-            product.categoryId,
-            product.images,
-            product.minQuantity,
-            product.stock,
-            product.featured,
-            JSON.stringify(product.specifications || {}),
-            JSON.stringify(product.reviews || []),
-            JSON.stringify(product.variations || [])
-          ]
-        );
-      }
+    // Clean up old demo products if they exist
+    const demoSkus = ['TSH-001', 'AUD-002', 'WAT-003', 'BEA-004', 'SHO-005', 'BAG-006'];
+    for (const sku of demoSkus) {
+      await client.query('DELETE FROM products WHERE sku = $1', [sku]);
     }
 
+    // Products are no longer seeded automatically
     console.log('Database initialization completed.');
   } catch (err) {
     console.error('Error initializing database:', err);

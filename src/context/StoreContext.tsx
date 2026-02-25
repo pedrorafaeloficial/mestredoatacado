@@ -1,61 +1,159 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, Category, CartItem, INITIAL_PRODUCTS, INITIAL_CATEGORIES } from '../types/store';
+import { Product, Category, CartItem } from '../types/store';
 import { toast } from 'sonner';
 
 interface StoreContextType {
   products: Product[];
   categories: Category[];
   cart: CartItem[];
-  addProduct: (product: Product) => void;
-  updateProduct: (product: Product) => void;
-  deleteProduct: (id: string) => void;
-  addCategory: (category: Category) => void;
-  updateCategory: (category: Category) => void;
-  deleteCategory: (id: string) => void;
+  addProduct: (product: Product) => Promise<void>;
+  updateProduct: (product: Product) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  addCategory: (category: Category) => Promise<void>;
+  updateCategory: (category: Category) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   addToCart: (product: Product, quantity: number, selectedVariations?: Record<string, string>) => void;
   removeFromCart: (productId: string, selectedVariations?: Record<string, string>) => void;
   updateCartQuantity: (productId: string, quantity: number, selectedVariations?: Record<string, string>) => void;
   clearCart: () => void;
   getCartTotal: () => number;
+  loading: boolean;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
-  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [productsRes, categoriesRes] = await Promise.all([
+          fetch('/api/products'),
+          fetch('/api/categories')
+        ]);
+        
+        if (productsRes.ok) {
+          const productsData = await productsRes.json();
+          setProducts(productsData);
+        }
+        
+        if (categoriesRes.ok) {
+          const categoriesData = await categoriesRes.json();
+          setCategories(categoriesData);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Erro ao carregar dados do servidor');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Product Actions
-  const addProduct = (product: Product) => {
-    setProducts(prev => [...prev, product]);
-    toast.success('Produto adicionado com sucesso!');
+  const addProduct = async (product: Product) => {
+    try {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(product)
+      });
+      if (!res.ok) throw new Error('Failed to add product');
+      
+      // We don't use the response directly because we need the camelCase mapping from GET
+      // For simplicity, we just add the local object, but ideally we'd fetch or map the response
+      setProducts(prev => [...prev, product]);
+      toast.success('Produto adicionado com sucesso!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao adicionar produto');
+    }
   };
 
-  const updateProduct = (product: Product) => {
-    setProducts(prev => prev.map(p => p.id === product.id ? product : p));
-    toast.success('Produto atualizado com sucesso!');
+  const updateProduct = async (product: Product) => {
+    try {
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(product)
+      });
+      if (!res.ok) throw new Error('Failed to update product');
+      
+      setProducts(prev => prev.map(p => p.id === product.id ? product : p));
+      toast.success('Produto atualizado com sucesso!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao atualizar produto');
+    }
   };
 
-  const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
-    toast.success('Produto removido com sucesso!');
+  const deleteProduct = async (id: string) => {
+    try {
+      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete product');
+      
+      setProducts(prev => prev.filter(p => p.id !== id));
+      toast.success('Produto removido com sucesso!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao remover produto');
+    }
   };
 
   // Category Actions
-  const addCategory = (category: Category) => {
-    setCategories(prev => [...prev, category]);
-    toast.success('Categoria adicionada com sucesso!');
+  const addCategory = async (category: Category) => {
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(category)
+      });
+      if (!res.ok) throw new Error('Failed to add category');
+      
+      const newCategory = await res.json();
+      setCategories(prev => [...prev, newCategory]);
+      toast.success('Categoria adicionada com sucesso!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao adicionar categoria');
+    }
   };
 
-  const updateCategory = (category: Category) => {
-    setCategories(prev => prev.map(c => c.id === category.id ? category : c));
-    toast.success('Categoria atualizada com sucesso!');
+  const updateCategory = async (category: Category) => {
+    try {
+      const res = await fetch(`/api/categories/${category.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(category)
+      });
+      if (!res.ok) throw new Error('Failed to update category');
+      
+      const updatedCategory = await res.json();
+      setCategories(prev => prev.map(c => c.id === category.id ? updatedCategory : c));
+      toast.success('Categoria atualizada com sucesso!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao atualizar categoria');
+    }
   };
 
-  const deleteCategory = (id: string) => {
-    setCategories(prev => prev.filter(c => c.id !== id));
-    toast.success('Categoria removida com sucesso!');
+  const deleteCategory = async (id: string) => {
+    try {
+      const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete category');
+      
+      setCategories(prev => prev.filter(c => c.id !== id));
+      toast.success('Categoria removida com sucesso!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao remover categoria');
+    }
   };
 
   // Cart Actions
@@ -117,7 +215,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       removeFromCart,
       updateCartQuantity,
       clearCart,
-      getCartTotal
+      getCartTotal,
+      loading
     }}>
       {children}
     </StoreContext.Provider>
