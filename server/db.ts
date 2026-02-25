@@ -1,6 +1,8 @@
 import { Pool } from 'pg';
 
-const connectionString = process.env.DATABASE_URL || 'postgres://postgres:09b40f73fcf9ee321325@sites_mestredoatacado-db:5432/mestredoatacado-db?sslmode=disable';
+const connectionString = process.env.DATABASE_URL || 
+  (process.env.PGHOST ? `postgres://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}?sslmode=disable` : undefined) ||
+  'postgres://postgres:09b40f73fcf9ee321325@sites_mestredoatacado-db:5432/mestredoatacado-db?sslmode=disable';
 
 export const pool = new Pool({
   connectionString,
