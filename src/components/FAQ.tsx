@@ -77,26 +77,49 @@ export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="py-24 bg-white">
-      <div className="container mx-auto px-6 max-w-3xl">
-        <div className="text-center mb-12">
-          <h2 className="font-display text-3xl font-bold text-zinc-900">Perguntas Frequentes</h2>
-        </div>
+    <section id="faq" className="py-24 bg-white relative overflow-hidden">
+      {/* Decorative background */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-30">
+        <div className="absolute -top-[10%] -right-[5%] w-[30%] h-[30%] rounded-full bg-zinc-200 blur-[80px]" />
+        <div className="absolute bottom-[10%] -left-[5%] w-[30%] h-[30%] rounded-full bg-zinc-200 blur-[80px]" />
+      </div>
+
+      <div className="container mx-auto px-6 max-w-3xl relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+          className="text-center mb-12"
+        >
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-zinc-900 mb-4">Perguntas Frequentes</h2>
+          <p className="text-zinc-600">Tire suas dúvidas e compre com segurança.</p>
+        </motion.div>
 
         <div className="space-y-4">
           {faqs.map((faq, index) => (
-            <div 
+            <motion.div 
               key={index} 
-              className="border border-zinc-200 rounded-2xl overflow-hidden bg-zinc-50"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: index * 0.05 }}
+              className={`border rounded-2xl overflow-hidden transition-all duration-300 ${openIndex === index ? 'border-amber-500 shadow-md bg-white' : 'border-zinc-200 bg-zinc-50 hover:border-amber-300 hover:bg-white'}`}
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full px-6 py-5 text-left flex items-center justify-between font-bold text-zinc-900 hover:bg-zinc-100 transition-colors"
+                className="w-full px-6 py-5 text-left flex items-center justify-between font-bold text-zinc-900 transition-colors"
               >
-                {faq.q}
-                <ChevronDown 
-                  className={`w-5 h-5 text-zinc-500 transition-transform duration-300 ${openIndex === index ? 'rotate-180' : ''}`} 
-                />
+                <span className={`transition-colors duration-300 ${openIndex === index ? 'text-amber-600' : ''}`}>
+                  {faq.q}
+                </span>
+                <motion.div
+                  animate={{ rotate: openIndex === index ? 180 : 0 }}
+                  transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
+                  className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors duration-300 ${openIndex === index ? 'bg-amber-100 text-amber-600' : 'bg-zinc-200 text-zinc-500'}`}
+                >
+                  <ChevronDown className="w-5 h-5" />
+                </motion.div>
               </button>
               <AnimatePresence>
                 {openIndex === index && (
@@ -104,15 +127,15 @@ export function FAQ() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
                   >
-                    <div className="px-6 pb-5 text-zinc-600">
+                    <div className="px-6 pb-6 text-zinc-600 leading-relaxed border-t border-zinc-100 pt-4 mt-2">
                       {faq.a}
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
