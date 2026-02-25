@@ -1,5 +1,4 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import { pool } from "./server/db";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -7,6 +6,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function startServer() {
+  console.log("Starting server in mode:", process.env.NODE_ENV);
   const app = express();
   const PORT = 3000;
 
@@ -29,12 +29,15 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
+    console.log("Initializing Vite middleware...");
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
+    console.log("Serving static files from dist...");
     // Serve static files in production
     app.use(express.static(path.resolve(__dirname, "dist")));
     app.get("*", (req, res) => {
