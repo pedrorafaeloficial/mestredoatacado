@@ -8,7 +8,7 @@
     "prebuild": "npm install @tailwindcss/oxide --force",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "node server.ts",
+    "start": "tsx server.ts",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
   },
