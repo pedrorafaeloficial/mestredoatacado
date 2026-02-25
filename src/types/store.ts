@@ -16,14 +16,17 @@ export const ReviewSchema = z.object({
 
 export const VariationSchema = z.object({
   id: z.string().optional(),
-  name: z.string(),
-  options: z.array(z.string())
+  name: z.string().trim().min(1, "Nome da variação é obrigatório"),
+  options: z.union([
+    z.string().trim().min(1, "Adicione pelo menos uma opção"),
+    z.array(z.string()).min(1, "Adicione pelo menos uma opção")
+  ])
 });
 
 export const ProductSchema = z.object({
   id: z.string().optional(),
-  sku: z.string().min(1, "SKU é obrigatório"),
-  name: z.string().min(1, "Nome é obrigatório"),
+  sku: z.string().trim().min(1, "SKU é obrigatório"),
+  name: z.string().trim().min(1, "Nome é obrigatório"),
   description: z.string().optional().default(""),
   price: z.coerce.number({ invalid_type_error: "Preço inválido" }).min(0, "Preço não pode ser negativo"),
   categoryId: z.string().min(1, "Categoria é obrigatória"),

@@ -213,16 +213,23 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
                         <input
                           {...register(`variations.${index}.name` as const)}
                           placeholder="Nome (ex: Tamanho)"
-                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                          className={`w-full px-3 py-2 border rounded-lg text-sm ${errors.variations?.[index]?.name ? 'border-red-500' : ''}`}
                         />
+                        {errors.variations?.[index]?.name && (
+                          <span className="text-red-500 text-xs mt-1 block">{errors.variations[index]?.name?.message}</span>
+                        )}
                       </div>
                       <div>
                         <input
                           {...register(`variations.${index}.options` as const)}
                           placeholder="Opções separadas por vírgula (ex: P, M, G)"
-                          className="w-full px-3 py-2 border rounded-lg text-sm"
+                          className={`w-full px-3 py-2 border rounded-lg text-sm ${errors.variations?.[index]?.options ? 'border-red-500' : ''}`}
                         />
-                        <p className="text-xs text-zinc-400 mt-1">Separe as opções por vírgula</p>
+                        {errors.variations?.[index]?.options ? (
+                          <span className="text-red-500 text-xs mt-1 block">{errors.variations[index]?.options?.message}</span>
+                        ) : (
+                          <p className="text-xs text-zinc-400 mt-1">Separe as opções por vírgula</p>
+                        )}
                       </div>
                     </div>
                   </div>
