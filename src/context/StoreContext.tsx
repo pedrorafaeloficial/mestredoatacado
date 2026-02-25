@@ -31,41 +31,38 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
     
-    const fetchData = async (retries = 3) => {
+    const fetchData = async (retries = 5) => {
       try {
         const [productsRes, categoriesRes] = await Promise.all([
           fetch('/api/products'),
           fetch('/api/categories')
         ]);
         
-        if (productsRes.ok) {
-          const contentType = productsRes.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            const productsData = await productsRes.json();
-            if (isMounted) setProducts(productsData);
-          } else {
-            throw new Error("Expected JSON from /api/products, got " + contentType);
-          }
+        // Check products response
+        const pContentType = productsRes.headers.get("content-type");
+        if (!productsRes.ok || !pContentType || !pContentType.includes("application/json")) {
+          throw new Error(`Failed to fetch products: ${productsRes.status} ${pContentType}`);
         }
+        const productsData = await productsRes.json();
+        if (isMounted) setProducts(productsData);
         
-        if (categoriesRes.ok) {
-          const contentType = categoriesRes.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            const categoriesData = await categoriesRes.json();
-            if (isMounted) setCategories(categoriesData);
-          } else {
-            throw new Error("Expected JSON from /api/categories, got " + contentType);
-          }
+        // Check categories response
+        const cContentType = categoriesRes.headers.get("content-type");
+        if (!categoriesRes.ok || !cContentType || !cContentType.includes("application/json")) {
+          throw new Error(`Failed to fetch categories: ${categoriesRes.status} ${cContentType}`);
         }
+        const categoriesData = await categoriesRes.json();
+        if (isMounted) setCategories(categoriesData);
+        
       } catch (error) {
         console.error('Error fetching data:', error);
         if (retries > 0 && isMounted) {
           console.log(`Retrying fetch... (${retries} attempts left)`);
-          setTimeout(() => fetchData(retries - 1), 2000);
+          setTimeout(() => fetchData(retries - 1), 3000);
           return; // Skip finally block for retries
         }
         if (isMounted) {
-          toast.error('Erro ao carregar dados do servidor');
+          toast.error('Erro ao carregar dados do servidor. O banco de dados pode estar indisponível.');
           setLoading(false);
         }
       }

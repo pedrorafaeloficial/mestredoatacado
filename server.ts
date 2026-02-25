@@ -60,18 +60,6 @@ async function startServer() {
       );
     `);
 
-    // Clean up old demo products if they exist
-    const demoSkus = ['TSH-001', 'AUD-002', 'WAT-003', 'BEA-004', 'SHO-005', 'BAG-006'];
-    for (const sku of demoSkus) {
-      await client.query('DELETE FROM products WHERE sku = $1', [sku]);
-    }
-
-    // Clean up old demo categories if they exist
-    const demoCategoryIds = ['1', '2', '3', '4', '5', '6'];
-    for (const id of demoCategoryIds) {
-      await client.query('DELETE FROM categories WHERE id = $1', [id]);
-    }
-
     client.release();
   } catch (err) {
     console.error("DATABASE CONNECTION ERROR:", err);

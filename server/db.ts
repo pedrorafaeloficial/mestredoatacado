@@ -1,17 +1,16 @@
 import { Pool } from 'pg';
 
-let connectionString = process.env.DATABASE_URL || 
-  (process.env.PGHOST ? `postgres://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}?sslmode=disable` : undefined) ||
-  'postgres://postgres:09b40f73fcf9ee321325@easypanel.agenciafoxon.com.br:3050/mestredoatacado-db?sslmode=disable';
+// Remove PG environment variables that might interfere with the connection string
+delete process.env.PGHOST;
+delete process.env.PGUSER;
+delete process.env.PGPASSWORD;
+delete process.env.PGDATABASE;
+delete process.env.PGPORT;
+
+let connectionString = 'postgres://postgres:09b40f73fcf9ee321325@easypanel.agenciafoxon.com.br:3050/mestredoatacado-db?sslmode=disable';
 
 // Log which connection method is being used (masking password)
-if (process.env.DATABASE_URL) {
-  console.log("DB: Using DATABASE_URL");
-} else if (process.env.PGHOST) {
-  console.log(`DB: Using individual variables (Host: ${process.env.PGHOST})`);
-} else {
-  console.log("DB: Using hardcoded fallback connection string");
-}
+console.log("DB: Using hardcoded connection string provided by user");
 
 export const pool = new Pool({
   connectionString,

@@ -1,13 +1,13 @@
 import { z } from 'zod';
 
 export const CategorySchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  slug: z.string(),
+  id: z.string().optional(),
+  name: z.string().min(1, "Nome é obrigatório"),
+  slug: z.string().optional(),
 });
 
 export const ReviewSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   userName: z.string(),
   rating: z.number().min(1).max(5),
   comment: z.string(),
@@ -15,13 +15,13 @@ export const ReviewSchema = z.object({
 });
 
 export const VariationSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   name: z.string(),
   options: z.array(z.string())
 });
 
 export const ProductSchema = z.object({
-  id: z.string(),
+  id: z.string().optional(),
   sku: z.string().min(1, "SKU é obrigatório"),
   name: z.string().min(1, "Nome é obrigatório"),
   description: z.string(),

@@ -13,7 +13,10 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
     resolver: zodResolver(ProductSchema) as any,
     defaultValues: {
       images: [''],
-      variations: []
+      variations: [],
+      price: 0,
+      minQuantity: 1,
+      stock: 0
     }
   });
 
@@ -23,13 +26,22 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
   });
 
   const onSubmit = (data: Product) => {
+    // Filter out empty images
+    const validImages = data.images?.filter(img => img.trim() !== '') || [];
+    
+    if (validImages.length === 0) {
+      toast.error('Adicione pelo menos uma imagem válida (URL ou upload)');
+      return;
+    }
+
     // Ensure variations have IDs
     const productData = {
       ...data,
+      images: validImages,
       variations: data.variations?.map(v => ({
         ...v,
         id: v.id || uuidv4(),
-        // Ensure options is an array if it came from a string input (though we'll try to handle it as array in UI)
+        // Ensure options is an array if it came from a string input
         options: Array.isArray(v.options) ? v.options : (v.options as string).split(',').map((s: string) => s.trim()).filter(Boolean)
       }))
     };
@@ -446,7 +458,7 @@ function CategoriesManager({ categories, onAdd, onUpdate, onDelete, isEditing, s
 }
 
 export function AdminDashboard() {
-  const { products, categories, addProduct, updateProduct, removeProduct, addCategory, updateCategory, removeCategory } = useStore();
+  const { products, categories, addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory } = useStore();
   const [activeTab, setActiveTab] = useState<'products' | 'categories'>('products');
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -482,7 +494,7 @@ export function AdminDashboard() {
             categories={categories}
             onAdd={addProduct}
             onUpdate={updateProduct}
-            onDelete={removeProduct}
+            onDelete={deleteProduct}
             isEditing={isEditing}
             setIsEditing={setIsEditing}
             isCreating={isCreating}
@@ -493,7 +505,7 @@ export function AdminDashboard() {
             categories={categories}
             onAdd={addCategory}
             onUpdate={updateCategory}
-            onDelete={removeCategory}
+            onDelete={deleteCategory}
             isEditing={isEditing}
             setIsEditing={setIsEditing}
             isCreating={isCreating}
