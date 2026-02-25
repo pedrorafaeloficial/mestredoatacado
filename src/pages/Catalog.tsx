@@ -368,10 +368,7 @@ export function Catalog() {
         </div>
 
         {/* 6. Staggered Grid Animation */}
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
+        <div 
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
         >
           {isLoading ? (
@@ -391,7 +388,9 @@ export function Catalog() {
             paginatedProducts.map((product) => (
               <motion.div
                 key={product.id}
-                variants={itemVariants}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
                 className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow border border-zinc-100 group flex flex-col h-full relative"
               >
                 {/* 7. Micro-interaction: Heart Icon */}
@@ -440,7 +439,7 @@ export function Catalog() {
               </motion.div>
             ))
           )}
-        </motion.div>
+        </div>
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
