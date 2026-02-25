@@ -2,19 +2,42 @@ import express from "express";
 import { pool } from "./server/db";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Global error handlers to prevent silent crashes
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception thrown:', err);
+});
+
 async function startServer() {
-  console.log("Starting server in mode:", process.env.NODE_ENV);
+  console.log("--- Server Starting ---");
+  console.log("Mode:", process.env.NODE_ENV || 'development');
+  
   const app = express();
   const PORT = 3000;
 
   app.use(express.json());
 
+  // Test Database Connection
+  try {
+    console.log("Testing database connection...");
+    const client = await pool.connect();
+    console.log("Database connection successful!");
+    client.release();
+  } catch (err) {
+    console.error("DATABASE CONNECTION ERROR:", err);
+    console.log("Server will continue, but database features may fail.");
+  }
+
   // API Routes
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
+    res.json({ status: "ok", mode: process.env.NODE_ENV });
   });
 
   app.get("/api/products", async (req, res) => {
@@ -29,25 +52,43 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
-    console.log("Initializing Vite middleware...");
-    const { createServer: createViteServer } = await import("vite");
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+    console.log("Initializing Vite middleware (Development Mode)...");
+    try {
+      const { createServer: createViteServer } = await import("vite");
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+    } catch (err) {
+      console.error("Failed to initialize Vite:", err);
+    }
   } else {
-    console.log("Serving static files from dist...");
-    // Serve static files in production
-    app.use(express.static(path.resolve(__dirname, "dist")));
-    app.get("*", (req, res) => {
-      res.sendFile(path.resolve(__dirname, "dist", "index.html"));
-    });
+    console.log("Production Mode: Serving static files from 'dist'...");
+    const distPath = path.resolve(__dirname, "dist");
+    
+    if (!fs.existsSync(distPath)) {
+      console.error("CRITICAL ERROR: 'dist' folder not found!");
+      console.log("Make sure you ran 'npm run build' before starting the server.");
+    } else {
+      app.use(express.static(distPath));
+      app.get("*", (req, res) => {
+        const indexPath = path.resolve(distPath, "index.html");
+        if (fs.existsSync(indexPath)) {
+          res.sendFile(indexPath);
+        } else {
+          res.status(404).send("index.html not found in dist. Build may have failed.");
+        }
+      });
+    }
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
+    console.log("--- Server Ready ---");
   });
 }
 
-startServer();
+startServer().catch(err => {
+  console.error("FATAL ERROR DURING STARTUP:", err);
+});
