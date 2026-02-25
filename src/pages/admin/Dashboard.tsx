@@ -350,9 +350,9 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
                 </p>
                 {product.variations && product.variations.length > 0 && (
                   <div className="flex gap-2 mt-1">
-                    {product.variations.map(v => (
+                    {product.variations.map((v: any) => (
                       <span key={v.id} className="text-xs bg-zinc-100 px-2 py-0.5 rounded text-zinc-600">
-                        {v.name}: {v.options.join(', ')}
+                        {v.name}: {Array.isArray(v.options) ? v.options.join(', ') : v.options}
                       </span>
                     ))}
                   </div>
