@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 
 let connectionString = process.env.DATABASE_URL || 
   (process.env.PGHOST ? `postgres://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}?sslmode=disable` : undefined) ||
-  'postgres://postgres:09b40f73fcf9ee321325@sites_mestredoatacado-db:5432/mestredoatacado-db?sslmode=disable';
+  'postgres://postgres:09b40f73fcf9ee321325@easypanel.agenciafoxon.com.br:3050/mestredoatacado-db?sslmode=disable';
 
 // Log which connection method is being used (masking password)
 if (process.env.DATABASE_URL) {

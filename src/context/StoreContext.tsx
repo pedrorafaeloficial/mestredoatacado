@@ -29,7 +29,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
+    let isMounted = true;
+    
+    const fetchData = async (retries = 3) => {
       try {
         const [productsRes, categoriesRes] = await Promise.all([
           fetch('/api/products'),
@@ -37,23 +39,47 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ]);
         
         if (productsRes.ok) {
-          const productsData = await productsRes.json();
-          setProducts(productsData);
+          const contentType = productsRes.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const productsData = await productsRes.json();
+            if (isMounted) setProducts(productsData);
+          } else {
+            throw new Error("Expected JSON from /api/products, got " + contentType);
+          }
         }
         
         if (categoriesRes.ok) {
-          const categoriesData = await categoriesRes.json();
-          setCategories(categoriesData);
+          const contentType = categoriesRes.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const categoriesData = await categoriesRes.json();
+            if (isMounted) setCategories(categoriesData);
+          } else {
+            throw new Error("Expected JSON from /api/categories, got " + contentType);
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error);
-        toast.error('Erro ao carregar dados do servidor');
-      } finally {
+        if (retries > 0 && isMounted) {
+          console.log(`Retrying fetch... (${retries} attempts left)`);
+          setTimeout(() => fetchData(retries - 1), 2000);
+          return; // Skip finally block for retries
+        }
+        if (isMounted) {
+          toast.error('Erro ao carregar dados do servidor');
+          setLoading(false);
+        }
+      }
+      
+      if (isMounted) {
         setLoading(false);
       }
     };
 
     fetchData();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Product Actions
@@ -64,15 +90,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(product)
       });
-      if (!res.ok) throw new Error('Failed to add product');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Failed to add product');
+      }
       
       // We don't use the response directly because we need the camelCase mapping from GET
       // For simplicity, we just add the local object, but ideally we'd fetch or map the response
       setProducts(prev => [...prev, product]);
       toast.success('Produto adicionado com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Erro ao adicionar produto');
+      toast.error(error.message || 'Erro ao adicionar produto');
     }
   };
 
@@ -83,26 +112,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(product)
       });
-      if (!res.ok) throw new Error('Failed to update product');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Failed to update product');
+      }
       
       setProducts(prev => prev.map(p => p.id === product.id ? product : p));
       toast.success('Produto atualizado com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Erro ao atualizar produto');
+      toast.error(error.message || 'Erro ao atualizar produto');
     }
   };
 
   const deleteProduct = async (id: string) => {
     try {
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete product');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Failed to delete product');
+      }
       
       setProducts(prev => prev.filter(p => p.id !== id));
       toast.success('Produto removido com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Erro ao remover produto');
+      toast.error(error.message || 'Erro ao remover produto');
     }
   };
 
@@ -114,14 +149,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(category)
       });
-      if (!res.ok) throw new Error('Failed to add category');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Failed to add category');
+      }
+      
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Expected JSON response from server");
+      }
       
       const newCategory = await res.json();
       setCategories(prev => [...prev, newCategory]);
       toast.success('Categoria adicionada com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Erro ao adicionar categoria');
+      toast.error(error.message || 'Erro ao adicionar categoria');
     }
   };
 
@@ -132,27 +175,38 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(category)
       });
-      if (!res.ok) throw new Error('Failed to update category');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Failed to update category');
+      }
+      
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Expected JSON response from server");
+      }
       
       const updatedCategory = await res.json();
       setCategories(prev => prev.map(c => c.id === category.id ? updatedCategory : c));
       toast.success('Categoria atualizada com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Erro ao atualizar categoria');
+      toast.error(error.message || 'Erro ao atualizar categoria');
     }
   };
 
   const deleteCategory = async (id: string) => {
     try {
       const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete category');
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Failed to delete category');
+      }
       
       setCategories(prev => prev.filter(c => c.id !== id));
       toast.success('Categoria removida com sucesso!');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error('Erro ao remover categoria');
+      toast.error(error.message || 'Erro ao remover categoria');
     }
   };
 

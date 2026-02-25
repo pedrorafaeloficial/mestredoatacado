@@ -60,30 +60,16 @@ async function startServer() {
       );
     `);
 
-    // Seed categories if empty
-    const { rows: categoryRows } = await client.query('SELECT COUNT(*) FROM categories');
-    if (parseInt(categoryRows[0].count) === 0) {
-      console.log('Seeding categories...');
-      const INITIAL_CATEGORIES = [
-        { id: '1', name: 'Moda', slug: 'moda' },
-        { id: '2', name: 'Eletrônicos', slug: 'eletronicos' },
-        { id: '3', name: 'Beleza', slug: 'beleza' },
-        { id: '4', name: 'Ferramentas', slug: 'ferramentas' },
-        { id: '5', name: 'Calçados', slug: 'calcados' },
-        { id: '6', name: 'Brinquedos', slug: 'brinquedos' },
-      ];
-      for (const category of INITIAL_CATEGORIES) {
-        await client.query(
-          'INSERT INTO categories (id, name, slug) VALUES ($1, $2, $3)',
-          [category.id, category.name, category.slug]
-        );
-      }
-    }
-
     // Clean up old demo products if they exist
     const demoSkus = ['TSH-001', 'AUD-002', 'WAT-003', 'BEA-004', 'SHO-005', 'BAG-006'];
     for (const sku of demoSkus) {
       await client.query('DELETE FROM products WHERE sku = $1', [sku]);
+    }
+
+    // Clean up old demo categories if they exist
+    const demoCategoryIds = ['1', '2', '3', '4', '5', '6'];
+    for (const id of demoCategoryIds) {
+      await client.query('DELETE FROM categories WHERE id = $1', [id]);
     }
 
     client.release();
