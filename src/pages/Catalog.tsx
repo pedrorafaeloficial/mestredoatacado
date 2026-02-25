@@ -196,7 +196,7 @@ export function Catalog() {
                     whileHover={{ y: -5 }}
                     className="min-w-[280px] md:min-w-[320px] snap-center bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-zinc-100 flex flex-col group"
                   >
-                    <div className="relative aspect-video overflow-hidden bg-zinc-100">
+                    <Link to={`/produto/${product.id}`} className="block relative aspect-video overflow-hidden bg-zinc-100">
                       <motion.img 
                         whileHover={{ scale: 1.1 }}
                         transition={{ duration: 0.6 }}
@@ -207,10 +207,12 @@ export function Catalog() {
                       <div className="absolute top-3 right-3 bg-amber-500 text-zinc-900 text-xs font-bold px-2 py-1 rounded-full shadow-lg">
                         Novo
                       </div>
-                    </div>
+                    </Link>
                     <div className="p-4 flex flex-col flex-1">
-                      <h3 className="font-bold text-zinc-900 line-clamp-1 mb-1">{product.name}</h3>
-                      <p className="text-zinc-500 text-sm line-clamp-2 mb-3 flex-1">{product.description}</p>
+                      <Link to={`/produto/${product.id}`} className="block">
+                        <h3 className="font-bold text-zinc-900 line-clamp-1 mb-1 hover:text-amber-600 transition-colors">{product.name}</h3>
+                        <p className="text-zinc-500 text-sm line-clamp-2 mb-3 flex-1">{product.description}</p>
+                      </Link>
                       <div className="flex items-center justify-between mt-auto">
                         <span className="font-bold text-lg">R$ {product.price.toFixed(2)}</span>
                         <motion.button 
