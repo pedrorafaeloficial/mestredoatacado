@@ -72,14 +72,9 @@ async function startServer() {
       console.log("Make sure you ran 'npm run build' before starting the server.");
     } else {
       app.use(express.static(distPath));
-      app.get("/*", (req, res) => {
-        const indexPath = path.resolve(distPath, "index.html");
-        if (fs.existsSync(indexPath)) {
-          res.sendFile(indexPath);
-        } else {
-          res.status(404).send("index.html not found in dist. Build may have failed.");
-        }
-      });
+     app.get('/:path*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
     }
   }
 
