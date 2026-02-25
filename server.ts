@@ -72,7 +72,7 @@ async function startServer() {
       console.log("Make sure you ran 'npm run build' before starting the server.");
     } else {
       app.use(express.static(distPath));
-      app.get("*", (req, res) => {
+      app.get("/*", (req, res) => {
         const indexPath = path.resolve(distPath, "index.html");
         if (fs.existsSync(indexPath)) {
           res.sendFile(indexPath);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
 import { Plus, Pencil, Trash, Image as ImageIcon, X, ListPlus, Search, Upload } from 'lucide-react';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -53,7 +53,7 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      Array.from(files).forEach(file => {
+      Array.from(files).forEach((file: File) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64String = reader.result as string;
