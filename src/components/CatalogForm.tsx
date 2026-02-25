@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Download, Lock, CheckCircle2, Loader2 } from 'lucide-react';
 

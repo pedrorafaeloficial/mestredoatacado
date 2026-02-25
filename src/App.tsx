@@ -1,31 +1,25 @@
-import { Header } from './components/Header';
-import { Hero } from './components/Hero';
-import { Problem } from './components/Problem';
-import { Solution } from './components/Solution';
-import { SocialProof } from './components/SocialProof';
-import { Offer } from './components/Offer';
-import { CatalogForm } from './components/CatalogForm';
-import { Guarantee } from './components/Guarantee';
-import { CTA } from './components/CTA';
-import { FAQ } from './components/FAQ';
-import { Footer } from './components/Footer';
-import { WhatsAppButton } from './components/WhatsAppButton';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { StoreProvider } from './context/StoreContext';
+import { Home } from './pages/Home';
+import { Catalog } from './pages/Catalog';
+import { ProductDetails } from './pages/ProductDetails';
+import { AdminLogin } from './pages/admin/Login';
+import { AdminDashboard } from './pages/admin/Dashboard';
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 font-sans selection:bg-amber-500 selection:text-zinc-950">
-      <Header />
-      <Hero />
-      <Problem />
-      <Solution />
-      <SocialProof />
-      <Offer />
-      <CatalogForm />
-      <Guarantee />
-      <CTA />
-      <FAQ />
-      <Footer />
-      <WhatsAppButton />
-    </div>
+    <StoreProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/catalogo" element={<Catalog />} />
+          <Route path="/produto/:id" element={<ProductDetails />} />
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        </Routes>
+        <Toaster position="top-right" richColors />
+      </BrowserRouter>
+    </StoreProvider>
   );
 }
