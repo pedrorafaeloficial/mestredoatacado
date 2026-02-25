@@ -156,7 +156,7 @@ export function Catalog() {
             Nosso Catálogo
           </motion.h1>
           <p className="text-lg text-zinc-600 max-w-2xl mx-auto">
-            Confira alguns dos produtos mais vendidos do momento. Para ver a lista completa e preços atualizados, entre em contato no WhatsApp.
+            Confira nosso catálogo completo de produtos com os melhores preços do mercado para o seu negócio.
           </p>
         </motion.div>
 
@@ -497,19 +497,7 @@ export function Catalog() {
           </div>
         )}
 
-        <div className="mt-16 text-center">
-          <p className="text-zinc-600 mb-6">Isso é apenas uma amostra. Temos mais de 2.000 produtos disponíveis.</p>
-          <motion.a 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            href="https://wa.me/5511977957131?text=Quero%20ver%20o%20cat%C3%A1logo%20completo" 
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-zinc-950 px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-amber-500/20"
-          >
-            Baixar Catálogo Completo PDF
-          </motion.a>
-        </div>
+
       </main>
 
       <Footer />

@@ -44,6 +44,15 @@ async function startServer() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS sku_prefixes (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        prefix TEXT NOT NULL,
+        min_quantity INTEGER DEFAULT 6
+      );
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS products (
         id TEXT PRIMARY KEY,
         sku TEXT NOT NULL,
@@ -60,6 +69,13 @@ async function startServer() {
         variations JSONB DEFAULT '[]'
       );
     `);
+
+    // Add sku_prefix_id if it doesn't exist
+    try {
+      await client.query(`ALTER TABLE products ADD COLUMN sku_prefix_id TEXT REFERENCES sku_prefixes(id);`);
+    } catch (e) {
+      // Column might already exist
+    }
 
     client.release();
   } catch (err) {
@@ -136,6 +152,74 @@ async function startServer() {
     }
   });
 
+  // Sku Prefixes API
+  app.get("/api/sku-prefixes", requireDb, async (req, res) => {
+    try {
+      const result = await pool.query('SELECT * FROM sku_prefixes ORDER BY name ASC');
+      const prefixes = result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        prefix: row.prefix,
+        minQuantity: row.min_quantity
+      }));
+      res.json(prefixes);
+    } catch (error) {
+      console.error('Error fetching sku prefixes:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+
+  app.post("/api/sku-prefixes", requireDb, async (req, res) => {
+    try {
+      const { id, name, prefix, minQuantity } = req.body;
+      const result = await pool.query(
+        'INSERT INTO sku_prefixes (id, name, prefix, min_quantity) VALUES ($1, $2, $3, $4) RETURNING *',
+        [id, name, prefix, minQuantity || 6]
+      );
+      res.status(201).json({
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        prefix: result.rows[0].prefix,
+        minQuantity: result.rows[0].min_quantity
+      });
+    } catch (error) {
+      console.error('Error creating sku prefix:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+
+  app.put("/api/sku-prefixes/:id", requireDb, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, prefix, minQuantity } = req.body;
+      const result = await pool.query(
+        'UPDATE sku_prefixes SET name = $1, prefix = $2, min_quantity = $3 WHERE id = $4 RETURNING *',
+        [name, prefix, minQuantity || 6, id]
+      );
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+      res.json({
+        id: result.rows[0].id,
+        name: result.rows[0].name,
+        prefix: result.rows[0].prefix,
+        minQuantity: result.rows[0].min_quantity
+      });
+    } catch (error) {
+      console.error('Error updating sku prefix:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+
+  app.delete("/api/sku-prefixes/:id", requireDb, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await pool.query('DELETE FROM sku_prefixes WHERE id = $1', [id]);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error deleting sku prefix:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+
   // Products API
   app.get("/api/products", requireDb, async (req, res) => {
     try {
@@ -148,6 +232,7 @@ async function startServer() {
         description: row.description,
         price: parseFloat(row.price),
         categoryId: row.category_id,
+        skuPrefixId: row.sku_prefix_id,
         images: row.images || [],
         minQuantity: row.min_quantity,
         stock: row.stock,
@@ -165,14 +250,14 @@ async function startServer() {
 
   app.post("/api/products", requireDb, async (req, res) => {
     try {
-      const { id, sku, name, description, price, categoryId, images, minQuantity, stock, featured, specifications, reviews, variations } = req.body;
+      const { id, sku, skuPrefixId, name, description, price, categoryId, images, minQuantity, stock, featured, specifications, reviews, variations } = req.body;
       const result = await pool.query(
         `INSERT INTO products (
-          id, sku, name, description, price, category_id, images, 
+          id, sku, sku_prefix_id, name, description, price, category_id, images, 
           min_quantity, stock, featured, specifications, reviews, variations
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
         [
-          id, sku, name, description, price, categoryId, images || [],
+          id, sku, skuPrefixId || null, name, description, price, categoryId, images || [],
           minQuantity || 1, stock || 0, featured || false,
           JSON.stringify(specifications || {}),
           JSON.stringify(reviews || []),
@@ -189,14 +274,14 @@ async function startServer() {
   app.put("/api/products/:id", requireDb, async (req, res) => {
     try {
       const { id } = req.params;
-      const { sku, name, description, price, categoryId, images, minQuantity, stock, featured, specifications, reviews, variations } = req.body;
+      const { sku, skuPrefixId, name, description, price, categoryId, images, minQuantity, stock, featured, specifications, reviews, variations } = req.body;
       const result = await pool.query(
         `UPDATE products SET 
-          sku = $1, name = $2, description = $3, price = $4, category_id = $5, images = $6, 
-          min_quantity = $7, stock = $8, featured = $9, specifications = $10, reviews = $11, variations = $12
-        WHERE id = $13 RETURNING *`,
+          sku = $1, sku_prefix_id = $2, name = $3, description = $4, price = $5, category_id = $6, images = $7, 
+          min_quantity = $8, stock = $9, featured = $10, specifications = $11, reviews = $12, variations = $13
+        WHERE id = $14 RETURNING *`,
         [
-          sku, name, description, price, categoryId, images || [],
+          sku, skuPrefixId || null, name, description, price, categoryId, images || [],
           minQuantity || 1, stock || 0, featured || false,
           JSON.stringify(specifications || {}),
           JSON.stringify(reviews || []),

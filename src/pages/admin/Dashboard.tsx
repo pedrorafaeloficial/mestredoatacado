@@ -3,12 +3,12 @@ import { useStore } from '../../context/StoreContext';
 import { Plus, Pencil, Trash, Image as ImageIcon, X, ListPlus, Search, Upload, LogOut } from 'lucide-react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ProductSchema, CategorySchema, Product, Category } from '../../types/store';
+import { ProductSchema, CategorySchema, SkuPrefixSchema, Product, Category, SkuPrefix } from '../../types/store';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
-function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEditing, setIsEditing, isCreating, setIsCreating }: any) {
+function ProductsManager({ products, categories, skuPrefixes, onAdd, onUpdate, onDelete, isEditing, setIsEditing, isCreating, setIsCreating }: any) {
   const [searchTerm, setSearchTerm] = useState('');
   const { register, control, handleSubmit, reset, setValue, getValues, watch, formState: { errors } } = useForm<Product>({
     resolver: zodResolver(ProductSchema) as any,
@@ -20,6 +20,33 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
       stock: 0
     }
   });
+
+  const selectedPrefixId = watch('skuPrefixId');
+
+  // Auto-generate SKU when prefix changes and we are creating
+  React.useEffect(() => {
+    if (isCreating && selectedPrefixId) {
+      const prefixObj = skuPrefixes.find((p: SkuPrefix) => p.id === selectedPrefixId);
+      if (prefixObj) {
+        const prefixStr = prefixObj.prefix;
+        // Find highest number for this prefix
+        const existingWithPrefix = products.filter((p: Product) => p.skuPrefixId === selectedPrefixId || p.sku.startsWith(prefixStr + '-'));
+        let maxNum = 0;
+        existingWithPrefix.forEach((p: Product) => {
+          const parts = p.sku.split('-');
+          if (parts.length > 1) {
+            const num = parseInt(parts[1], 10);
+            if (!isNaN(num) && num > maxNum) {
+              maxNum = num;
+            }
+          }
+        });
+        const nextNum = maxNum + 1;
+        const nextSku = `${prefixStr}-${nextNum.toString().padStart(3, '0')}`;
+        setValue('sku', nextSku);
+      }
+    }
+  }, [selectedPrefixId, isCreating, products, skuPrefixes, setValue]);
 
   const { fields: variationFields, append: appendVariation, remove: removeVariation } = useFieldArray({
     control,
@@ -127,8 +154,19 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1">Fornecedor (SKU Padrão)</label>
+                <select {...register('skuPrefixId')} className="w-full px-3 py-2 border rounded-lg">
+                  <option value="">Nenhum (SKU Manual)</option>
+                  {skuPrefixes.map((p: SkuPrefix) => (
+                    <option key={p.id} value={p.id}>{p.name} ({p.prefix})</option>
+                  ))}
+                </select>
+                {errors.skuPrefixId && <span className="text-red-500 text-xs">{errors.skuPrefixId.message}</span>}
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-1">SKU</label>
-                <input {...register('sku')} className="w-full px-3 py-2 border rounded-lg" placeholder="Ex: CAM-001" />
+                <input {...register('sku')} className={`w-full px-3 py-2 border rounded-lg ${selectedPrefixId ? 'bg-zinc-100' : ''}`} placeholder="Ex: CAM-001" readOnly={!!selectedPrefixId} />
                 {errors.sku && <span className="text-red-500 text-xs">{errors.sku.message}</span>}
               </div>
 
@@ -472,9 +510,123 @@ function CategoriesManager({ categories, onAdd, onUpdate, onDelete, isEditing, s
   );
 }
 
+function SkuPrefixesManager({ skuPrefixes, onAdd, onUpdate, onDelete, isEditing, setIsEditing, isCreating, setIsCreating }: any) {
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<SkuPrefix>({
+    resolver: zodResolver(SkuPrefixSchema)
+  });
+
+  const onSubmit = (data: SkuPrefix) => {
+    if (isEditing) {
+      onUpdate(data);
+      setIsEditing(null);
+    } else {
+      onAdd({ ...data, id: uuidv4() });
+      setIsCreating(false);
+    }
+    reset();
+  };
+
+  const startEdit = (prefix: SkuPrefix) => {
+    setIsEditing(prefix.id);
+    setIsCreating(false);
+    setValue('id', prefix.id);
+    setValue('name', prefix.name);
+    setValue('prefix', prefix.prefix);
+    setValue('minQuantity', prefix.minQuantity);
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold">Gerenciar Fornecedores (SKU)</h2>
+        {!isCreating && !isEditing && (
+          <button
+            onClick={() => { setIsCreating(true); reset({ minQuantity: 6 }); }}
+            className="flex items-center gap-2 bg-amber-500 text-zinc-900 px-4 py-2 rounded-lg font-bold hover:bg-amber-600 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Novo Fornecedor
+          </button>
+        )}
+      </div>
+
+      {(isCreating || isEditing) && (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-zinc-200 mb-8 max-w-md">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-lg">{isEditing ? 'Editar Fornecedor' : 'Novo Fornecedor'}</h3>
+            <button onClick={() => { setIsCreating(false); setIsEditing(null); }} className="text-zinc-400 hover:text-zinc-600">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">Nome do Fornecedor</label>
+              <input {...register('name')} className="w-full px-3 py-2 border rounded-lg" placeholder="Ex: Fornecedor Moda" />
+              {errors.name && <span className="text-red-500 text-xs">{errors.name.message}</span>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">Prefixo do SKU</label>
+              <input {...register('prefix')} className="w-full px-3 py-2 border rounded-lg uppercase" placeholder="Ex: MOD01" />
+              {errors.prefix && <span className="text-red-500 text-xs">{errors.prefix.message}</span>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">Qtd. Mínima no Carrinho</label>
+              <input type="number" {...register('minQuantity')} className="w-full px-3 py-2 border rounded-lg" />
+              {errors.minQuantity && <span className="text-red-500 text-xs">{errors.minQuantity.message}</span>}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <button 
+                type="button" 
+                onClick={() => { setIsCreating(false); setIsEditing(null); }}
+                className="px-4 py-2 text-zinc-600 hover:bg-zinc-100 rounded-lg"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit" 
+                className="px-4 py-2 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800"
+              >
+                Salvar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="grid gap-4 max-w-md">
+        {skuPrefixes.map((prefix: SkuPrefix) => (
+          <div key={prefix.id} className="bg-white p-4 rounded-xl border border-zinc-200 flex items-center justify-between">
+            <div>
+              <span className="font-medium text-zinc-900 block">{prefix.name}</span>
+              <span className="text-sm text-zinc-500">Prefixo: {prefix.prefix} | Mínimo: {prefix.minQuantity} peças</span>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => startEdit(prefix)} className="p-2 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
+                <Pencil className="w-5 h-5" />
+              </button>
+              <button onClick={() => onDelete(prefix.id)} className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                <Trash className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        ))}
+        {skuPrefixes.length === 0 && (
+          <div className="text-center py-8 text-zinc-500">
+            Nenhum fornecedor cadastrado.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function AdminDashboard() {
-  const { products, categories, addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory } = useStore();
-  const [activeTab, setActiveTab] = useState<'products' | 'categories'>('products');
+  const { products, categories, skuPrefixes, addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory, addSkuPrefix, updateSkuPrefix, deleteSkuPrefix } = useStore();
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'skuPrefixes'>('products');
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
@@ -510,6 +662,14 @@ export function AdminDashboard() {
             >
               Categorias
             </button>
+            <button
+              onClick={() => { setActiveTab('skuPrefixes'); setIsEditing(null); setIsCreating(false); }}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'skuPrefixes' ? 'bg-zinc-900 text-white' : 'text-zinc-600 hover:bg-zinc-50'
+              }`}
+            >
+              Fornecedores (SKU)
+            </button>
           </div>
         </div>
 
@@ -517,6 +677,7 @@ export function AdminDashboard() {
           <ProductsManager
             products={products}
             categories={categories}
+            skuPrefixes={skuPrefixes}
             onAdd={addProduct}
             onUpdate={updateProduct}
             onDelete={deleteProduct}
@@ -525,12 +686,23 @@ export function AdminDashboard() {
             isCreating={isCreating}
             setIsCreating={setIsCreating}
           />
-        ) : (
+        ) : activeTab === 'categories' ? (
           <CategoriesManager
             categories={categories}
             onAdd={addCategory}
             onUpdate={updateCategory}
             onDelete={deleteCategory}
+            isEditing={isEditing}
+            setIsEditing={setIsEditing}
+            isCreating={isCreating}
+            setIsCreating={setIsCreating}
+          />
+        ) : (
+          <SkuPrefixesManager
+            skuPrefixes={skuPrefixes}
+            onAdd={addSkuPrefix}
+            onUpdate={updateSkuPrefix}
+            onDelete={deleteSkuPrefix}
             isEditing={isEditing}
             setIsEditing={setIsEditing}
             isCreating={isCreating}

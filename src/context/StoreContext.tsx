@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Product, Category, CartItem } from '../types/store';
+import { Product, Category, CartItem, SkuPrefix } from '../types/store';
 import { toast } from 'sonner';
 
 interface StoreContextType {
   products: Product[];
   categories: Category[];
+  skuPrefixes: SkuPrefix[];
   cart: CartItem[];
   addProduct: (product: Product) => Promise<void>;
   updateProduct: (product: Product) => Promise<void>;
@@ -12,6 +13,9 @@ interface StoreContextType {
   addCategory: (category: Category) => Promise<void>;
   updateCategory: (category: Category) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  addSkuPrefix: (prefix: SkuPrefix) => Promise<void>;
+  updateSkuPrefix: (prefix: SkuPrefix) => Promise<void>;
+  deleteSkuPrefix: (id: string) => Promise<void>;
   addToCart: (product: Product, quantity: number, selectedVariations?: Record<string, string>) => void;
   removeFromCart: (productId: string, selectedVariations?: Record<string, string>) => void;
   updateCartQuantity: (productId: string, quantity: number, selectedVariations?: Record<string, string>) => void;
@@ -25,6 +29,7 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [skuPrefixes, setSkuPrefixes] = useState<SkuPrefix[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,9 +38,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     
     const fetchData = async (retries = 5) => {
       try {
-        const [productsRes, categoriesRes] = await Promise.all([
+        const [productsRes, categoriesRes, prefixesRes] = await Promise.all([
           fetch('/api/products'),
-          fetch('/api/categories')
+          fetch('/api/categories'),
+          fetch('/api/sku-prefixes')
         ]);
         
         // Check products response
@@ -53,6 +59,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
         const categoriesData = await categoriesRes.json();
         if (isMounted) setCategories(categoriesData);
+
+        // Check prefixes response
+        if (prefixesRes.ok) {
+          const prefixesData = await prefixesRes.json();
+          if (isMounted) setSkuPrefixes(prefixesData);
+        }
         
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -207,6 +219,65 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Sku Prefix Actions
+  const addSkuPrefix = async (prefix: SkuPrefix) => {
+    try {
+      const res = await fetch('/api/sku-prefixes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(prefix)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Failed to add sku prefix');
+      }
+      
+      const newPrefix = await res.json();
+      setSkuPrefixes(prev => [...prev, newPrefix]);
+      toast.success('Fornecedor adicionado com sucesso!');
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || 'Erro ao adicionar fornecedor');
+    }
+  };
+
+  const updateSkuPrefix = async (prefix: SkuPrefix) => {
+    try {
+      const res = await fetch(`/api/sku-prefixes/${prefix.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(prefix)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Failed to update sku prefix');
+      }
+      
+      const updatedPrefix = await res.json();
+      setSkuPrefixes(prev => prev.map(p => p.id === prefix.id ? updatedPrefix : p));
+      toast.success('Fornecedor atualizado com sucesso!');
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || 'Erro ao atualizar fornecedor');
+    }
+  };
+
+  const deleteSkuPrefix = async (id: string) => {
+    try {
+      const res = await fetch(`/api/sku-prefixes/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Failed to delete sku prefix');
+      }
+      
+      setSkuPrefixes(prev => prev.filter(p => p.id !== id));
+      toast.success('Fornecedor removido com sucesso!');
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || 'Erro ao remover fornecedor');
+    }
+  };
+
   // Cart Actions
   const addToCart = (product: Product, quantity: number, selectedVariations?: Record<string, string>) => {
     setCart(prev => {
@@ -255,6 +326,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     <StoreContext.Provider value={{
       products,
       categories,
+      skuPrefixes,
       cart,
       addProduct,
       updateProduct,
@@ -262,6 +334,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       addCategory,
       updateCategory,
       deleteCategory,
+      addSkuPrefix,
+      updateSkuPrefix,
+      deleteSkuPrefix,
       addToCart,
       removeFromCart,
       updateCartQuantity,
