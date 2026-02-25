@@ -1,16 +1,15 @@
 import { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
-import { Plus, Pencil, Trash, Image as ImageIcon, X, ListPlus } from 'lucide-react';
+import { Plus, Pencil, Trash, Image as ImageIcon, X, ListPlus, Search, Upload } from 'lucide-react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ProductSchema, CategorySchema, Product, Category } from '../../types/store';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 
-// ... (rest of imports)
-
 function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEditing, setIsEditing, isCreating, setIsCreating }: any) {
-  const { register, control, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<Product>({
+  const [searchTerm, setSearchTerm] = useState('');
+  const { register, control, handleSubmit, reset, setValue, getValues, watch, formState: { errors } } = useForm<Product>({
     resolver: zodResolver(ProductSchema) as any,
     defaultValues: {
       images: [''],
@@ -23,7 +22,6 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
     name: "variations"
   });
 
-  // ... (onSubmit and startEdit functions remain similar, but ensure variations are handled)
   const onSubmit = (data: Product) => {
     // Ensure variations have IDs
     const productData = {
@@ -49,16 +47,35 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
   const startEdit = (product: Product) => {
     setIsEditing(product.id);
     setIsCreating(false);
-    // Need to reset the form with the product data
-    // For variations, we might need to process them if we change how they are stored vs displayed
     reset(product);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result as string;
+          const currentImages = getValues('images') || [];
+          // Filter out empty strings if any, but keep at least one if it's the only one and empty (though logic below handles it)
+          const validImages = currentImages.filter(img => img !== '');
+          setValue('images', [...validImages, base64String]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
   };
 
   const images = watch('images');
 
+  const filteredProducts = products.filter((product: Product) => 
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div>
-      {/* ... (header and button remain same) */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold">Gerenciar Produtos</h2>
         {!isCreating && !isEditing && (
@@ -72,9 +89,21 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
         )}
       </div>
 
+      {!isCreating && !isEditing && (
+        <div className="mb-6 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+          <input
+            type="text"
+            placeholder="Buscar por nome ou SKU..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-zinc-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
+          />
+        </div>
+      )}
+
       {(isCreating || isEditing) && (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-zinc-200 mb-8">
-          {/* ... (header) */}
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-lg">{isEditing ? 'Editar Produto' : 'Novo Produto'}</h3>
             <button onClick={() => { setIsCreating(false); setIsEditing(null); }} className="text-zinc-400 hover:text-zinc-600">
@@ -83,7 +112,6 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
           </div>
           
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* ... (existing fields: Name, SKU, Price, Category, etc.) */}
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-700 mb-1">SKU</label>
@@ -179,18 +207,6 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
                           {...register(`variations.${index}.options` as const)}
                           placeholder="Opções separadas por vírgula (ex: P, M, G)"
                           className="w-full px-3 py-2 border rounded-lg text-sm"
-                          // We need to transform string to array on submit, or use a Controller. 
-                          // For simplicity in this demo, we'll let it be a string in the input and transform on submit/load.
-                          // However, react-hook-form expects the value to match the type.
-                          // Let's use a simple text input and handle the array conversion manually in the input props if needed, 
-                          // but since we defined options as string[] in schema, we might need a Controller or a custom component.
-                          // To keep it simple and robust without complex UI components:
-                          // We will treat the input as a string and split it.
-                          // But typescript will complain because `options` is string[].
-                          // Let's cast it or use a different approach.
-                          // Actually, let's just register it and let the user type comma separated values, 
-                          // but we need to ensure the form state handles it.
-                          // A better way for this rapid dev:
                         />
                         <p className="text-xs text-zinc-400 mt-1">Separe as opções por vírgula</p>
                       </div>
@@ -204,10 +220,37 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">Imagens (URLs)</label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-zinc-700">Imagens</label>
+                <div>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    multiple 
+                    onChange={handleImageUpload} 
+                    className="hidden" 
+                    id="image-upload"
+                  />
+                  <label 
+                    htmlFor="image-upload" 
+                    className="cursor-pointer bg-zinc-100 hover:bg-zinc-200 text-zinc-600 px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload Fotos Locais
+                  </label>
+                </div>
+              </div>
+              
               <div className="space-y-2">
                 {images?.map((_, index) => (
-                  <div key={index} className="flex gap-2">
+                  <div key={index} className="flex gap-2 items-center">
+                    <div className="w-10 h-10 bg-zinc-100 rounded overflow-hidden flex-shrink-0">
+                      {images[index] ? (
+                        <img src={images[index]} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon className="w-5 h-5 text-zinc-400 m-auto" />
+                      )}
+                    </div>
                     <input 
                       {...register(`images.${index}`)} 
                       placeholder="https://..." 
@@ -234,7 +277,7 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
                     onClick={() => setValue('images', [...images, ''])}
                     className="text-sm text-amber-600 font-medium hover:underline"
                   >
-                    + Adicionar outra imagem
+                    + Adicionar outra URL
                   </button>
                 )}
               </div>
@@ -260,9 +303,8 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
         </div>
       )}
       
-      {/* ... (product list remains same) */}
       <div className="grid gap-4">
-        {products.map((product: Product) => (
+        {filteredProducts.map((product: Product) => (
           <div key={product.id} className="bg-white p-4 rounded-xl border border-zinc-200 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-lg overflow-hidden bg-zinc-100">
@@ -300,6 +342,11 @@ function ProductsManager({ products, categories, onAdd, onUpdate, onDelete, isEd
             </div>
           </div>
         ))}
+        {filteredProducts.length === 0 && (
+          <div className="text-center py-12 text-zinc-500">
+            Nenhum produto encontrado.
+          </div>
+        )}
       </div>
     </div>
   );

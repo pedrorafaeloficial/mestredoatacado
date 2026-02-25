@@ -10,7 +10,7 @@ export function AdminLogin() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Simple hardcoded password for demo purposes
-    if (password === 'admin123') {
+    if (password === 'Pedro733762@!') {
       localStorage.setItem('isAdmin', 'true');
       toast.success('Login realizado com sucesso!');
       navigate('/admin/dashboard');

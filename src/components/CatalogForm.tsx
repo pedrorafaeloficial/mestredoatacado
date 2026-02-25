@@ -55,10 +55,10 @@ export function CatalogForm() {
         >
           <div className="bg-zinc-950 text-white p-10 md:w-2/5 flex flex-col justify-center">
             <h3 className="font-display text-3xl font-bold mb-4">
-              Baixe o Catálogo Completo
+              Receba Ofertas Imperdíveis!
             </h3>
             <p className="text-zinc-400 mb-8">
-              Preencha os dados ao lado para receber imediatamente nosso catálogo com preços e fotos em alta resolução no seu WhatsApp.
+              Preencha os dados ao lado para receber imediatamente nossas melhores ofertas e o catálogo completo com preços no seu WhatsApp.
             </p>
             <div className="flex items-center gap-3 text-sm text-zinc-500">
               <Lock className="w-4 h-4" />
@@ -161,7 +161,7 @@ export function CatalogForm() {
                   ) : (
                     <>
                       <Download className="w-5 h-5" />
-                      Baixar Catálogo Agora
+                      Receber Ofertas Agora
                     </>
                   )}
                 </button>
