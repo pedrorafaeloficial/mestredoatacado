@@ -39,7 +39,7 @@ export const ProductSchema = z.object({
   price: z.coerce.number({ message: "Preço inválido" }).min(0, "Preço não pode ser negativo"),
   categoryId: z.string().min(1, "Categoria é obrigatória"),
   images: z.array(z.string()).min(1, "Adicione pelo menos uma imagem"),
-  video: z.string().optional(),
+  video: z.union([z.string(), z.null()]).optional().transform(v => v === '' ? null : v),
   minQuantity: z.coerce.number({ message: "Quantidade inválida" }).min(1, "Mínimo 1").default(1),
   stock: z.coerce.number({ message: "Estoque inválido" }).min(0, "Mínimo 0").default(0),
   featured: z.boolean().default(false),
