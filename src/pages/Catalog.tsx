@@ -196,15 +196,29 @@ export function Catalog() {
                     whileHover={{ y: -5 }}
                     className="min-w-[280px] md:min-w-[320px] snap-center bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all border border-zinc-100 flex flex-col group"
                   >
-                    <Link to={`/produto/${product.id}`} className="block relative aspect-video overflow-hidden bg-zinc-100">
+                    <Link to={`/produto/${product.id}`} className="block relative aspect-video overflow-hidden bg-zinc-100 group/image">
                       <motion.img 
                         whileHover={{ scale: 1.1 }}
                         transition={{ duration: 0.6 }}
                         src={product.images[0]} 
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full object-cover transition-opacity duration-300 ${product.video ? 'group-hover/image:opacity-0' : ''}`}
                       />
-                      <div className="absolute top-3 right-3 bg-amber-500 text-zinc-900 text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+                      {product.video && (
+                        <video 
+                          src={product.video} 
+                          className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover/image:opacity-100 transition-opacity duration-300"
+                          muted 
+                          loop 
+                          playsInline
+                          onMouseEnter={(e) => e.currentTarget.play()}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.pause();
+                            e.currentTarget.currentTime = 0;
+                          }}
+                        />
+                      )}
+                      <div className="absolute top-3 right-3 bg-amber-500 text-zinc-900 text-xs font-bold px-2 py-1 rounded-full shadow-lg z-10">
                         Novo
                       </div>
                     </Link>
@@ -400,16 +414,30 @@ export function Catalog() {
                   <Heart className="w-5 h-5" />
                 </button>
 
-                <Link to={`/produto/${product.id}`} className="block relative aspect-square overflow-hidden bg-zinc-100 cursor-pointer">
+                <Link to={`/produto/${product.id}`} className="block relative aspect-square overflow-hidden bg-zinc-100 cursor-pointer group/image">
                   {/* 8. Image Zoom Effect */}
                   <motion.img 
                     whileHover={{ scale: 1.1 }}
                     transition={{ duration: 0.5 }}
                     src={product.images[0]} 
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    className={`w-full h-full object-cover transition-opacity duration-300 ${product.video ? 'group-hover/image:opacity-0' : ''}`}
                   />
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-zinc-900 shadow-sm">
+                  {product.video && (
+                    <video 
+                      src={product.video} 
+                      className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover/image:opacity-100 transition-opacity duration-300"
+                      muted 
+                      loop 
+                      playsInline
+                      onMouseEnter={(e) => e.currentTarget.play()}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.pause();
+                        e.currentTarget.currentTime = 0;
+                      }}
+                    />
+                  )}
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-zinc-900 shadow-sm z-10">
                     {categories.find(c => c.id === product.categoryId)?.name}
                   </div>
                 </Link>

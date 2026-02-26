@@ -77,6 +77,13 @@ async function startServer() {
       // Column might already exist
     }
 
+    // Add video if it doesn't exist
+    try {
+      await client.query(`ALTER TABLE products ADD COLUMN video TEXT;`);
+    } catch (e) {
+      // Column might already exist
+    }
+
     client.release();
   } catch (err) {
     console.error("DATABASE CONNECTION ERROR:", err);
@@ -234,6 +241,7 @@ async function startServer() {
         categoryId: row.category_id,
         skuPrefixId: row.sku_prefix_id,
         images: row.images || [],
+        video: row.video,
         minQuantity: row.min_quantity,
         stock: row.stock,
         featured: row.featured,
@@ -250,14 +258,14 @@ async function startServer() {
 
   app.post("/api/products", requireDb, async (req, res) => {
     try {
-      const { id, sku, skuPrefixId, name, description, price, categoryId, images, minQuantity, stock, featured, specifications, reviews, variations } = req.body;
+      const { id, sku, skuPrefixId, name, description, price, categoryId, images, video, minQuantity, stock, featured, specifications, reviews, variations } = req.body;
       const result = await pool.query(
         `INSERT INTO products (
-          id, sku, sku_prefix_id, name, description, price, category_id, images, 
+          id, sku, sku_prefix_id, name, description, price, category_id, images, video,
           min_quantity, stock, featured, specifications, reviews, variations
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
         [
-          id, sku, skuPrefixId || null, name, description, price, categoryId, images || [],
+          id, sku, skuPrefixId || null, name, description, price, categoryId, images || [], video || null,
           minQuantity || 1, stock || 0, featured || false,
           JSON.stringify(specifications || {}),
           JSON.stringify(reviews || []),
@@ -274,14 +282,14 @@ async function startServer() {
   app.put("/api/products/:id", requireDb, async (req, res) => {
     try {
       const { id } = req.params;
-      const { sku, skuPrefixId, name, description, price, categoryId, images, minQuantity, stock, featured, specifications, reviews, variations } = req.body;
+      const { sku, skuPrefixId, name, description, price, categoryId, images, video, minQuantity, stock, featured, specifications, reviews, variations } = req.body;
       const result = await pool.query(
         `UPDATE products SET 
-          sku = $1, sku_prefix_id = $2, name = $3, description = $4, price = $5, category_id = $6, images = $7, 
-          min_quantity = $8, stock = $9, featured = $10, specifications = $11, reviews = $12, variations = $13
-        WHERE id = $14 RETURNING *`,
+          sku = $1, sku_prefix_id = $2, name = $3, description = $4, price = $5, category_id = $6, images = $7, video = $8,
+          min_quantity = $9, stock = $10, featured = $11, specifications = $12, reviews = $13, variations = $14
+        WHERE id = $15 RETURNING *`,
         [
-          sku, skuPrefixId || null, name, description, price, categoryId, images || [],
+          sku, skuPrefixId || null, name, description, price, categoryId, images || [], video || null,
           minQuantity || 1, stock || 0, featured || false,
           JSON.stringify(specifications || {}),
           JSON.stringify(reviews || []),

@@ -344,6 +344,13 @@ function ProductsManager({ products, categories, skuPrefixes, onAdd, onUpdate, o
               {errors.images && <span className="text-red-500 text-xs">{errors.images.message}</span>}
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">Vídeo (URL)</label>
+              <input {...register('video')} className="w-full px-3 py-2 border rounded-lg" placeholder="https://..." />
+              {errors.video && <span className="text-red-500 text-xs">{errors.video.message}</span>}
+              <p className="text-xs text-zinc-400 mt-1">Insira o link direto para um vídeo (mp4, webm, etc).</p>
+            </div>
+
             <div className="flex justify-end gap-2 pt-4">
               {Object.keys(errors).length > 0 && (
                 <div className="text-red-500 text-sm flex items-center mr-auto font-medium">

@@ -14,7 +14,7 @@ export function ProductDetails() {
   const navigate = useNavigate();
   const { products, categories, addToCart } = useStore();
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedImage, setSelectedImage] = useState<number | 'video'>(product?.video ? 'video' : 0);
   const [quantity, setQuantity] = useState(1);
   const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
 
@@ -62,24 +62,46 @@ export function ProductDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
           {/* Gallery */}
           <div className="space-y-4">
-            <div className="aspect-square bg-zinc-100 rounded-2xl overflow-hidden">
-              <motion.img 
-                key={selectedImage}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                src={product.images[selectedImage]} 
-                alt={product.name} 
-                className="w-full h-full object-cover"
-              />
+            <div className="aspect-square bg-zinc-100 rounded-2xl overflow-hidden relative">
+              {selectedImage === 'video' && product.video ? (
+                <video 
+                  src={product.video} 
+                  className="w-full h-full object-cover"
+                  controls
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+              ) : (
+                <motion.img 
+                  key={selectedImage as number}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  src={product.images[selectedImage as number]} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
-            {product.images.length > 1 && (
+            {(product.images.length > 1 || product.video) && (
               <div className="flex gap-4 overflow-x-auto pb-2">
+                {product.video && (
+                  <button
+                    onClick={() => setSelectedImage('video')}
+                    className={`relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all bg-zinc-900 flex items-center justify-center ${
+                      selectedImage === 'video' ? 'border-amber-500' : 'border-transparent opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <span className="text-white text-xs font-bold">VÍDEO</span>
+                  </button>
+                )}
                 {product.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
                     className={`relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${
-                      selectedImage === index ? 'border-zinc-900' : 'border-transparent'
+                      selectedImage === index ? 'border-zinc-900' : 'border-transparent opacity-70 hover:opacity-100'
                     }`}
                   >
                     <img src={image} alt="" className="w-full h-full object-cover" />
