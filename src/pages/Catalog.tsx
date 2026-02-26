@@ -240,7 +240,7 @@ export function Catalog() {
 
         {/* Search and Filter Controls */}
         {/* 5. Glassmorphism Filter Bar */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-zinc-200 p-4 mb-8 sticky top-24 z-40 transition-all">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-zinc-200 p-4 mb-8 z-40 transition-all">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />

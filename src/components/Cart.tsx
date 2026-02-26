@@ -11,8 +11,10 @@ interface CartProps {
 export function Cart({ isOpen, onClose }: CartProps) {
   const { cart, removeFromCart, updateCartQuantity, getCartTotal, skuPrefixes } = useStore();
 
+  type GroupedCartType = Record<string, { items: CartItem[], totalQuantity: number, prefix: SkuPrefix | undefined }>;
+
   // Group items by skuPrefixId
-  const groupedCart = cart.reduce((acc, item) => {
+  const groupedCart: GroupedCartType = cart.reduce((acc: GroupedCartType, item) => {
     const prefixId = item.skuPrefixId || 'manual';
     if (!acc[prefixId]) {
       acc[prefixId] = {
@@ -24,7 +26,7 @@ export function Cart({ isOpen, onClose }: CartProps) {
     acc[prefixId].items.push(item);
     acc[prefixId].totalQuantity += item.quantity;
     return acc;
-  }, {} as Record<string, { items: CartItem[], totalQuantity: number, prefix?: SkuPrefix }>);
+  }, {} as GroupedCartType);
 
   // Check validation
   let isValid = true;
@@ -34,7 +36,7 @@ export function Cart({ isOpen, onClose }: CartProps) {
     if (group.prefix) {
       if (group.totalQuantity < group.prefix.minQuantity) {
         isValid = false;
-        validationMessages.push(`Mínimo de ${group.prefix.minQuantity} peças para o fornecedor ${group.prefix.name} (${group.prefix.prefix}). Faltam ${group.prefix.minQuantity - group.totalQuantity} peças.`);
+        validationMessages.push(`Mínimo de ${group.prefix.minQuantity} peças para o fornecedor (${group.prefix.prefix}). Faltam ${group.prefix.minQuantity - group.totalQuantity} peças.`);
       }
     }
     // Check individual product minQuantity
@@ -117,7 +119,6 @@ export function Cart({ isOpen, onClose }: CartProps) {
                       <div className="flex items-center justify-between border-b border-zinc-200 pb-2">
                         <h3 className="font-bold text-zinc-900 flex items-center gap-2">
                           <span className="bg-zinc-900 text-white text-xs px-2 py-1 rounded">{group.prefix.prefix}</span>
-                          {group.prefix.name}
                         </h3>
                         <span className={`text-xs font-bold px-2 py-1 rounded ${group.totalQuantity >= group.prefix.minQuantity ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                           {group.totalQuantity} / {group.prefix.minQuantity} peças

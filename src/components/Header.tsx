@@ -17,10 +17,10 @@ export function Header({ onCartClick }: HeaderProps) {
   const isHome = location.pathname === '/';
 
   return (
-    <header className={`absolute top-0 left-0 right-0 z-50 pt-8 pb-4 ${!isHome ? 'bg-white/80 backdrop-blur-md shadow-sm' : ''}`}>
+    <header className={`absolute top-0 left-0 right-0 z-50 pt-2 pb-2 ${!isHome ? 'bg-white/80 backdrop-blur-md shadow-sm' : ''}`}>
       <div className="container mx-auto px-6 flex justify-between items-center relative">
         <Link to="/" className="hover:opacity-80 transition-opacity z-50">
-          <Logo className="scale-75 md:scale-90 origin-left" variant={isHome && !isMobileMenuOpen ? "light" : "dark"} />
+          <Logo className="scale-50 md:scale-75 origin-left" variant={isHome && !isMobileMenuOpen ? "light" : "dark"} />
         </Link>
         
         <nav className="hidden md:flex items-center gap-8">

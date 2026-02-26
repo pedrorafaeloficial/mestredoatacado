@@ -1,4 +1,5 @@
 import { motion } from 'motion/react';
+import { Link } from 'react-router-dom';
 import { Check, ShoppingCart } from 'lucide-react';
 
 export function Offer() {
@@ -86,10 +87,10 @@ export function Offer() {
               </p>
             </motion.div>
 
-            <a href="#catalogo" className="w-full flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-8 py-4 rounded-xl font-bold text-xl transition-all hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-[#25D366]/20">
+            <Link to="/catalogo" className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-zinc-900 px-8 py-4 rounded-xl font-bold text-xl transition-all hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-amber-500/20">
               <ShoppingCart className="w-6 h-6" />
-              Comprar via WhatsApp
-            </a>
+              Ir para o Catálogo
+            </Link>
             
             <p className="text-center text-sm text-zinc-400 mt-4">
               Pagamento seguro via Pix, Boleto ou Cartão em até 12x.

@@ -512,10 +512,10 @@ function CategoriesManager({ categories, onAdd, onUpdate, onDelete, isEditing, s
 
 function SkuPrefixesManager({ skuPrefixes, onAdd, onUpdate, onDelete, isEditing, setIsEditing, isCreating, setIsCreating }: any) {
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<SkuPrefix>({
-    resolver: zodResolver(SkuPrefixSchema)
+    resolver: zodResolver(SkuPrefixSchema) as any
   });
 
-  const onSubmit = (data: SkuPrefix) => {
+  const onSubmit = (data: any) => {
     if (isEditing) {
       onUpdate(data);
       setIsEditing(null);
