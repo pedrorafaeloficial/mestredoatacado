@@ -34,7 +34,7 @@ export function ProductDetails() {
 
     if (product) {
       addToCart(product, quantity, selectedVariations);
-      setIsCartOpen(true);
+      toast.success(`${quantity}x ${product.name} adicionado ao carrinho!`);
     }
   };
 
@@ -172,13 +172,22 @@ export function ProductDetails() {
                   </div>
                 </div>
 
-                <button
-                  onClick={handleAddToCart}
-                  className="w-full bg-zinc-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-amber-500 hover:text-zinc-900 transition-all shadow-lg flex items-center justify-center gap-2"
-                >
-                  <ShoppingBag className="w-5 h-5" />
-                  Adicionar ao Carrinho
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={handleAddToCart}
+                    className="flex-1 bg-zinc-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-amber-500 hover:text-zinc-900 transition-all shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <ShoppingBag className="w-5 h-5" />
+                    Adicionar ao Carrinho
+                  </button>
+                  
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="flex-1 bg-amber-500 text-zinc-900 py-4 rounded-xl font-bold text-lg hover:bg-amber-600 transition-all shadow-lg flex items-center justify-center gap-2"
+                  >
+                    Ver Carrinho
+                  </button>
+                </div>
                 
                 {product.stock > 0 ? (
                   <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
