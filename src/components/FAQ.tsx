@@ -17,7 +17,11 @@ const faqs = [
   },
   {
     q: "Qual o prazo de entrega?",
-    a: "Despachamos seu pedido em até 24 horas úteis após a confirmação do pagamento. Enviamos via Correios, Loggi e Jadlog para o Brasil todo! O prazo de chegada varia de acordo com o seu CEP e a transportadora escolhida."
+    a: "Despachamos seu pedido em até 24 horas úteis após a confirmação do pagamento. Enviamos via Correios, Loggi, Jadlog e também entregamos para as caravanas/ônibus de excursão que vêm para o Brás! O prazo de chegada varia de acordo com o seu CEP e a transportadora escolhida."
+  },
+  {
+    q: "Vocês entregam nas excursões/caravanas do Brás?",
+    a: "Sim! Entregamos o seu pedido diretamente no seu ônibus ou caravana de excursão que vem para o Brás. Basta informar os dados do ônibus e o local de parada no momento de fechar o pedido pelo WhatsApp."
   },
   {
     q: "Os produtos têm garantia?",

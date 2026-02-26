@@ -31,6 +31,12 @@ export function Cart({ isOpen, onClose }: CartProps) {
   // Check validation
   let isValid = true;
   const validationMessages: string[] = [];
+  const cartTotal = getCartTotal();
+
+  if (cartTotal > 0 && cartTotal < 500) {
+    isValid = false;
+    validationMessages.push(`O valor mínimo do pedido é de R$ 500,00. Faltam R$ ${(500 - cartTotal).toFixed(2)}.`);
+  }
 
   Object.values(groupedCart).forEach(group => {
     if (group.prefix) {
@@ -199,6 +205,14 @@ export function Cart({ isOpen, onClose }: CartProps) {
                   <span className="text-zinc-500 font-medium">Total do Pedido</span>
                   <span className="text-2xl font-black text-zinc-900">R$ {getCartTotal().toFixed(2)}</span>
                 </div>
+                
+                <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                  <div className="text-amber-600 mt-0.5">🚌</div>
+                  <p className="text-xs text-amber-800 leading-relaxed font-medium">
+                    Entregamos via Correios, Transportadoras e também nas <span className="font-bold">Caravanas/Excursões do Brás</span>!
+                  </p>
+                </div>
+
                 <button
                   onClick={handleCheckout}
                   disabled={!isValid}
