@@ -140,22 +140,22 @@ export function Catalog() {
 
       <Header onCartClick={() => setIsCartOpen(true)} />
       
-      <main className="pt-48 pb-24 container mx-auto px-6">
+      <main className="pt-32 pb-24 container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
           {/* 2. Parallax-like Header Effect */}
           <motion.h1 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="font-display text-4xl md:text-5xl font-bold text-zinc-900 mb-4"
+            className="font-display text-3xl md:text-4xl font-bold text-zinc-900 mb-3"
           >
             Nosso Catálogo
           </motion.h1>
-          <p className="text-lg text-zinc-600 max-w-2xl mx-auto">
+          <p className="text-base text-zinc-600 max-w-2xl mx-auto">
             Confira nosso catálogo completo de produtos com os melhores preços do mercado para o seu negócio.
           </p>
         </motion.div>

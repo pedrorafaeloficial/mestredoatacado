@@ -6,7 +6,7 @@ export function Logo({ className = "", variant = "light" }: { className?: string
       <img 
         src={logoSrc} 
         alt="Mestre do Atacado" 
-        className="w-auto h-auto max-h-[140px] object-contain"
+        className="w-auto h-auto max-h-[80px] md:max-h-[100px] object-contain"
       />
     </div>
   );
