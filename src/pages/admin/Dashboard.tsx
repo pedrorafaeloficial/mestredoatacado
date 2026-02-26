@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../../context/StoreContext';
-import { Plus, Pencil, Trash, Image as ImageIcon, X, ListPlus, Search, Upload, LogOut } from 'lucide-react';
+import { Plus, Pencil, Trash, Image as ImageIcon, X, ListPlus, Search, Upload, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ProductSchema, CategorySchema, SkuPrefixSchema, Product, Category, SkuPrefix } from '../../types/store';
@@ -10,6 +10,10 @@ import { useNavigate } from 'react-router-dom';
 
 function ProductsManager({ products, categories, skuPrefixes, onAdd, onUpdate, onDelete, isEditing, setIsEditing, isCreating, setIsCreating }: any) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const { register, control, handleSubmit, reset, setValue, getValues, watch, formState: { errors } } = useForm<Product>({
     resolver: zodResolver(ProductSchema) as any,
     defaultValues: {
@@ -125,10 +129,22 @@ function ProductsManager({ products, categories, skuPrefixes, onAdd, onUpdate, o
 
   const images = watch('images');
 
-  const filteredProducts = products.filter((product: Product) => 
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.sku.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter((product: Product) => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.sku.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory ? product.categoryId === selectedCategory : true;
+    return matchesSearch && matchesCategory;
+  });
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory]);
 
   return (
     <div>
@@ -146,15 +162,27 @@ function ProductsManager({ products, categories, skuPrefixes, onAdd, onUpdate, o
       </div>
 
       {!isCreating && !isEditing && (
-        <div className="mb-6 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Buscar por nome ou SKU..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-zinc-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
-          />
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Buscar por nome ou SKU..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-zinc-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
+            />
+          </div>
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="px-4 py-3 border border-zinc-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all bg-white"
+          >
+            <option value="">Todas as Categorias</option>
+            {categories.map((c: Category) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
         </div>
       )}
 
@@ -410,7 +438,7 @@ function ProductsManager({ products, categories, skuPrefixes, onAdd, onUpdate, o
       )}
       
       <div className="grid gap-4">
-        {filteredProducts.map((product: Product) => (
+        {paginatedProducts.map((product: Product) => (
           <div key={product.id} className="bg-white p-4 rounded-xl border border-zinc-200 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-lg overflow-hidden bg-zinc-100">
@@ -454,6 +482,30 @@ function ProductsManager({ products, categories, skuPrefixes, onAdd, onUpdate, o
           </div>
         )}
       </div>
+
+      {!isCreating && !isEditing && totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-8">
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="p-2 rounded-lg border border-zinc-200 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          
+          <span className="text-sm text-zinc-600 font-medium px-4">
+            Página {currentPage} de {totalPages}
+          </span>
+
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="p-2 rounded-lg border border-zinc-200 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

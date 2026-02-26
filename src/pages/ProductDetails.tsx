@@ -78,7 +78,7 @@ export function ProductDetails() {
                   key={selectedImage as number}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  src={product.images[selectedImage as number]} 
+                  src={product.images[selectedImage === 'video' ? 0 : (selectedImage as number)]} 
                   alt={product.name} 
                   className="w-full h-full object-cover"
                 />
