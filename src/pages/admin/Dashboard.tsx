@@ -107,6 +107,22 @@ function ProductsManager({ products, categories, skuPrefixes, onAdd, onUpdate, o
     }
   };
 
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 30 * 1024 * 1024) {
+        toast.error('O vídeo deve ter no máximo 30MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setValue('video', base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const images = watch('images');
 
   const filteredProducts = products.filter((product: Product) => 
@@ -345,10 +361,28 @@ function ProductsManager({ products, categories, skuPrefixes, onAdd, onUpdate, o
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">Vídeo (URL)</label>
-              <input {...register('video')} className="w-full px-3 py-2 border rounded-lg" placeholder="https://..." />
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-zinc-700">Vídeo</label>
+                <div>
+                  <input 
+                    type="file" 
+                    accept="video/*" 
+                    onChange={handleVideoUpload} 
+                    className="hidden" 
+                    id="video-upload"
+                  />
+                  <label 
+                    htmlFor="video-upload" 
+                    className="cursor-pointer bg-zinc-100 hover:bg-zinc-200 text-zinc-600 px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Upload Vídeo Local
+                  </label>
+                </div>
+              </div>
+              <input {...register('video')} className="w-full px-3 py-2 border rounded-lg" placeholder="Ou insira a URL do vídeo (https://...)" />
               {errors.video && <span className="text-red-500 text-xs">{errors.video.message}</span>}
-              <p className="text-xs text-zinc-400 mt-1">Insira o link direto para um vídeo (mp4, webm, etc).</p>
+              <p className="text-xs text-zinc-400 mt-1">Insira o link direto para um vídeo ou faça o upload (máx 30MB).</p>
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
