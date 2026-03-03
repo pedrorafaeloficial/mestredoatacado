@@ -230,7 +230,20 @@ async function startServer() {
   // Products API
   app.get("/api/products", requireDb, async (req, res) => {
     try {
-      const result = await pool.query('SELECT * FROM products ORDER BY name ASC');
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 12;
+      const offset = (page - 1) * limit;
+
+      // Get total count for metadata
+      const countResult = await pool.query('SELECT COUNT(*) FROM products');
+      const total = parseInt(countResult.rows[0].count);
+
+      // Get paginated products
+      const result = await pool.query(
+        'SELECT * FROM products ORDER BY name ASC LIMIT $1 OFFSET $2',
+        [limit, offset]
+      );
+
       // Map snake_case to camelCase
       const products = result.rows.map(row => ({
         id: row.id,
@@ -249,7 +262,14 @@ async function startServer() {
         reviews: row.reviews || [],
         variations: row.variations || []
       }));
-      res.json(products);
+
+      res.json({
+        items: products,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      });
     } catch (error) {
       console.error('Error fetching products:', error);
       res.status(500).json({ error: 'Internal Server Error' });

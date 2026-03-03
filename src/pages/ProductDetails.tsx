@@ -70,6 +70,7 @@ export function ProductDetails() {
                   animate={{ opacity: 1 }}
                   src={product.images[selectedImage]} 
                   alt={product.name} 
+                  loading="lazy"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -99,7 +100,7 @@ export function ProductDetails() {
                       selectedImage === index ? 'border-zinc-900' : 'border-transparent opacity-70 hover:opacity-100'
                     }`}
                   >
-                    <img src={image} alt="" className="w-full h-full object-cover" />
+                    <img src={image} alt="" loading="lazy" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

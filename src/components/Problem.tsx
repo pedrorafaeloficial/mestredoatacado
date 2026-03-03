@@ -55,6 +55,7 @@ export function Problem() {
             <img 
               src="https://images.unsplash.com/photo-1556740758-90de374c12ad?q=80&w=1000&auto=format&fit=crop" 
               alt="Lojista conferindo estoque" 
+              loading="lazy"
               className="rounded-2xl shadow-xl grayscale group-hover:grayscale-0 transition-all duration-700 transform-gpu group-hover:scale-[1.02] group-hover:rotate-y-6"
             />
           </motion.div>

@@ -9,10 +9,13 @@ import { useStore } from '../context/StoreContext';
 import { Cart } from '../components/Cart';
 
 export function Catalog() {
-  const { products, categories, addToCart } = useStore();
+  const { products, categories, addToCart, fetchProducts, hasMore, totalProducts } = useStore();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 12;
   
   // Carousel Ref
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -32,10 +35,6 @@ export function Catalog() {
   const [showFilters, setShowFilters] = useState(false);
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [sortBy, setSortBy] = useState<'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'>('name-asc');
-  
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12;
 
   // Latest products for carousel (last 10 added)
   const latestProducts = useMemo(() => {
@@ -72,16 +71,15 @@ export function Catalog() {
     });
   }, [products, selectedCategory, searchQuery, priceRange, sortBy]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Pagination logic removed in favor of server-side "Load More"
+  
+  const handleLoadMore = async () => {
+    if (isFetchingMore || !hasMore) return;
+    setIsFetchingMore(true);
+    const nextPage = page + 1;
+    await fetchProducts(nextPage, itemsPerPage, true);
+    setPage(nextPage);
+    setIsFetchingMore(false);
   };
 
   const clearFilters = () => {
@@ -89,7 +87,8 @@ export function Catalog() {
     setPriceRange({ min: '', max: '' });
     setSortBy('name-asc');
     setSelectedCategory(null);
-    setCurrentPage(1);
+    setPage(1);
+    fetchProducts(1, itemsPerPage, false);
   };
 
   const scrollCarousel = (direction: 'left' | 'right') => {
@@ -202,6 +201,7 @@ export function Catalog() {
                         transition={{ duration: 0.6 }}
                         src={product.images[0]} 
                         alt={product.name}
+                        loading="lazy"
                         className={`w-full h-full object-cover transition-opacity duration-300 ${product.video ? 'group-hover/image:opacity-0' : ''}`}
                       />
                       {product.video && (
@@ -262,7 +262,7 @@ export function Catalog() {
                 type="text"
                 placeholder="Buscar produtos..."
                 value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-zinc-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all bg-white/50"
               />
             </div>
@@ -302,14 +302,14 @@ export function Catalog() {
                         type="number"
                         placeholder="Min"
                         value={priceRange.min}
-                        onChange={(e) => { setPriceRange(prev => ({ ...prev, min: e.target.value })); setCurrentPage(1); }}
+                        onChange={(e) => { setPriceRange(prev => ({ ...prev, min: e.target.value })); setPage(1); }}
                         className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:border-amber-500 outline-none bg-white/50"
                       />
                       <input
                         type="number"
                         placeholder="Max"
                         value={priceRange.max}
-                        onChange={(e) => { setPriceRange(prev => ({ ...prev, max: e.target.value })); setCurrentPage(1); }}
+                        onChange={(e) => { setPriceRange(prev => ({ ...prev, max: e.target.value })); setPage(1); }}
                         className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:border-amber-500 outline-none bg-white/50"
                       />
                     </div>
@@ -322,7 +322,7 @@ export function Catalog() {
                       <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                       <select
                         value={sortBy}
-                        onChange={(e) => { setSortBy(e.target.value as any); setCurrentPage(1); }}
+                        onChange={(e) => { setSortBy(e.target.value as any); setPage(1); }}
                         className="w-full pl-10 pr-4 py-2 rounded-lg border border-zinc-200 focus:border-amber-500 outline-none appearance-none bg-white/50"
                       >
                         <option value="name-asc">Nome (A-Z)</option>
@@ -356,7 +356,7 @@ export function Catalog() {
           <div className="flex items-center gap-2 overflow-x-auto pb-2 w-full md:w-auto scrollbar-hide">
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={() => { setSelectedCategory(null); setCurrentPage(1); }}
+              onClick={() => { setSelectedCategory(null); setPage(1); }}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                 selectedCategory === null 
                   ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-900/20' 
@@ -369,7 +369,7 @@ export function Catalog() {
               <motion.button
                 key={category.id}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => { setSelectedCategory(category.id); setCurrentPage(1); }}
+              onClick={() => { setSelectedCategory(category.id); setPage(1); }}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                   selectedCategory === category.id 
                     ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-900/20' 
@@ -401,7 +401,7 @@ export function Catalog() {
               </div>
             ))
           ) : (
-            paginatedProducts.map((product) => (
+            filteredProducts.map((product) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -421,6 +421,7 @@ export function Catalog() {
                     transition={{ duration: 0.5 }}
                     src={product.images[0]} 
                     alt={product.name}
+                    loading="lazy"
                     className={`w-full h-full object-cover transition-opacity duration-300 ${product.video ? 'group-hover/image:opacity-0' : ''}`}
                   />
                   {product.video && (
@@ -471,40 +472,24 @@ export function Catalog() {
           )}
         </div>
 
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-2 mb-16">
+        {/* Load More Button */}
+        {hasMore && !isLoading && (
+          <div className="flex justify-center mb-16">
             <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 rounded-lg border border-zinc-200 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLoadMore}
+              disabled={isFetchingMore}
+              className="flex items-center gap-2 bg-white border border-zinc-200 text-zinc-900 px-8 py-4 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all disabled:opacity-50"
             >
-              <ChevronLeft className="w-5 h-5" />
-            </motion.button>
-            
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <motion.button
-                key={page}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => handlePageChange(page)}
-                className={`w-10 h-10 rounded-lg font-bold transition-colors ${
-                  currentPage === page
-                    ? 'bg-zinc-900 text-white'
-                    : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100'
-                }`}
-              >
-                {page}
-              </motion.button>
-            ))}
-
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-lg border border-zinc-200 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-5 h-5" />
+              {isFetchingMore ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Carregando...</span>
+                </>
+              ) : (
+                <span>Carregar Mais Produtos</span>
+              )}
             </motion.button>
           </div>
         )}

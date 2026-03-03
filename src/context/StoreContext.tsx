@@ -21,6 +21,9 @@ interface StoreContextType {
   updateCartQuantity: (productId: string, quantity: number, selectedVariations?: Record<string, string>) => void;
   clearCart: () => void;
   getCartTotal: () => number;
+  fetchProducts: (page: number, limit: number, append?: boolean) => Promise<void>;
+  hasMore: boolean;
+  totalProducts: number;
   loading: boolean;
 }
 
@@ -32,6 +35,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [skuPrefixes, setSkuPrefixes] = useState<SkuPrefix[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalProducts, setTotalProducts] = useState(0);
+
+  const fetchProducts = async (page: number, limit: number, append = false) => {
+    try {
+      const res = await fetch(`/api/products?page=${page}&limit=${limit}`);
+      if (!res.ok) throw new Error('Failed to fetch products');
+      const data = await res.json();
+      
+      if (append) {
+        setProducts(prev => [...prev, ...data.items]);
+      } else {
+        setProducts(data.items);
+      }
+      
+      setTotalProducts(data.total);
+      setHasMore(page < data.totalPages);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      toast.error('Erro ao carregar produtos');
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -39,7 +64,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const fetchData = async (retries = 5) => {
       try {
         const [productsRes, categoriesRes, prefixesRes] = await Promise.all([
-          fetch('/api/products'),
+          fetch('/api/products?page=1&limit=12'),
           fetch('/api/categories'),
           fetch('/api/sku-prefixes')
         ]);
@@ -50,7 +75,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           throw new Error(`Failed to fetch products: ${productsRes.status} ${pContentType}`);
         }
         const productsData = await productsRes.json();
-        if (isMounted) setProducts(productsData);
+        if (isMounted) {
+          setProducts(productsData.items);
+          setTotalProducts(productsData.total);
+          setHasMore(1 < productsData.totalPages);
+        }
         
         // Check categories response
         const cContentType = categoriesRes.headers.get("content-type");
@@ -342,6 +371,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateCartQuantity,
       clearCart,
       getCartTotal,
+      fetchProducts,
+      hasMore,
+      totalProducts,
       loading
     }}>
       {children}
