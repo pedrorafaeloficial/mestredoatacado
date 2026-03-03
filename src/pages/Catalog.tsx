@@ -41,41 +41,33 @@ export function Catalog() {
     return [...products].reverse().slice(0, 10);
   }, [products]);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(product => {
-      // Category
-      if (selectedCategory && product.categoryId !== selectedCategory) return false;
-      
-      // Search
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        if (!product.name.toLowerCase().includes(query) && 
-            !product.description.toLowerCase().includes(query)) {
-          return false;
-        }
-      }
+  // Fetch products when filters change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProducts(1, itemsPerPage, false, {
+        categoryId: selectedCategory,
+        search: searchQuery,
+        minPrice: priceRange.min,
+        maxPrice: priceRange.max,
+        sortBy: sortBy
+      });
+      setPage(1);
+    }, 300); // Debounce search
 
-      // Price
-      if (priceRange.min && product.price < Number(priceRange.min)) return false;
-      if (priceRange.max && product.price > Number(priceRange.max)) return false;
-
-      return true;
-    }).sort((a, b) => {
-      switch (sortBy) {
-        case 'price-asc': return a.price - b.price;
-        case 'price-desc': return b.price - a.price;
-        case 'name-asc': return a.name.localeCompare(b.name);
-        case 'name-desc': return b.name.localeCompare(a.name);
-        default: return 0;
-      }
-    });
-  }, [products, selectedCategory, searchQuery, priceRange, sortBy]);
+    return () => clearTimeout(timer);
+  }, [selectedCategory, searchQuery, priceRange.min, priceRange.max, sortBy]);
 
   // Pagination logic
   const handlePageChange = async (newPage: number) => {
     if (isFetchingPage || newPage < 1 || newPage > totalPages) return;
     setIsFetchingPage(true);
-    await fetchProducts(newPage, itemsPerPage, false);
+    await fetchProducts(newPage, itemsPerPage, false, {
+      categoryId: selectedCategory,
+      search: searchQuery,
+      minPrice: priceRange.min,
+      maxPrice: priceRange.max,
+      sortBy: sortBy
+    });
     setPage(newPage);
     setIsFetchingPage(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -355,7 +347,7 @@ export function Catalog() {
           <div className="flex items-center gap-2 overflow-x-auto pb-2 w-full md:w-auto scrollbar-hide">
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={() => { setSelectedCategory(null); setPage(1); }}
+              onClick={() => { setSelectedCategory(null); }}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                 selectedCategory === null 
                   ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-900/20' 
@@ -368,7 +360,7 @@ export function Catalog() {
               <motion.button
                 key={category.id}
                 whileTap={{ scale: 0.95 }}
-              onClick={() => { setSelectedCategory(category.id); setPage(1); }}
+                onClick={() => { setSelectedCategory(category.id); }}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                   selectedCategory === category.id 
                     ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-900/20' 
@@ -379,14 +371,14 @@ export function Catalog() {
               </motion.button>
             ))}
           </div>
-          <span className="text-zinc-500 text-sm whitespace-nowrap">{filteredProducts.length} produtos mostrados</span>
+          <span className="text-zinc-500 text-sm whitespace-nowrap">{totalProducts} produtos encontrados</span>
         </div>
 
         {/* 6. Staggered Grid Animation */}
         <div 
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12"
         >
-          {isLoading ? (
+          {isLoading || isFetchingPage ? (
              // Skeleton for Grid
              Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="bg-white rounded-2xl p-6 border border-zinc-100 animate-pulse">
@@ -400,7 +392,7 @@ export function Catalog() {
               </div>
             ))
           ) : (
-            filteredProducts.map((product) => (
+            products.map((product) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -520,7 +512,7 @@ export function Catalog() {
           </div>
         )}
 
-        {filteredProducts.length === 0 && !isLoading && (
+        {!isLoading && !isFetchingPage && products.length === 0 && (
           <div className="text-center py-24">
             <div className="bg-zinc-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-zinc-400" />

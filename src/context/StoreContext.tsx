@@ -21,7 +21,18 @@ interface StoreContextType {
   updateCartQuantity: (productId: string, quantity: number, selectedVariations?: Record<string, string>) => void;
   clearCart: () => void;
   getCartTotal: () => number;
-  fetchProducts: (page: number, limit: number, append?: boolean) => Promise<void>;
+  fetchProducts: (
+    page: number, 
+    limit: number, 
+    append?: boolean,
+    filters?: {
+      categoryId?: string | null;
+      search?: string;
+      minPrice?: string;
+      maxPrice?: string;
+      sortBy?: string;
+    }
+  ) => Promise<void>;
   hasMore: boolean;
   totalProducts: number;
   totalPages: number;
@@ -40,9 +51,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
-  const fetchProducts = async (page: number, limit: number, append = false) => {
+  const fetchProducts = async (
+    page: number, 
+    limit: number, 
+    append = false,
+    filters?: {
+      categoryId?: string | null;
+      search?: string;
+      minPrice?: string;
+      maxPrice?: string;
+      sortBy?: string;
+    }
+  ) => {
     try {
-      const res = await fetch(`/api/products?page=${page}&limit=${limit}`);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+
+      if (filters) {
+        if (filters.categoryId) params.append('categoryId', filters.categoryId);
+        if (filters.search) params.append('search', filters.search);
+        if (filters.minPrice) params.append('minPrice', filters.minPrice);
+        if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+        if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      }
+
+      const res = await fetch(`/api/products?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch products');
       const data = await res.json();
       

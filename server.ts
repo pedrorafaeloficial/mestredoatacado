@@ -232,17 +232,67 @@ async function startServer() {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 6;
+      const categoryId = req.query.categoryId as string;
+      const search = req.query.search as string;
+      const minPrice = parseFloat(req.query.minPrice as string);
+      const maxPrice = parseFloat(req.query.maxPrice as string);
+      const sortBy = req.query.sortBy as string || 'name-asc';
+      
       const offset = (page - 1) * limit;
 
+      let query = 'SELECT * FROM products WHERE 1=1';
+      let countQuery = 'SELECT COUNT(*) FROM products WHERE 1=1';
+      const params: any[] = [];
+      const countParams: any[] = [];
+      let paramIndex = 1;
+
+      if (categoryId) {
+        query += ` AND category_id = $${paramIndex}`;
+        countQuery += ` AND category_id = $${paramIndex}`;
+        params.push(categoryId);
+        countParams.push(categoryId);
+        paramIndex++;
+      }
+
+      if (search) {
+        query += ` AND (name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
+        countQuery += ` AND (name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
+        params.push(`%${search}%`);
+        countParams.push(`%${search}%`);
+        paramIndex++;
+      }
+
+      if (!isNaN(minPrice)) {
+        query += ` AND price >= $${paramIndex}`;
+        countQuery += ` AND price >= $${paramIndex}`;
+        params.push(minPrice);
+        countParams.push(minPrice);
+        paramIndex++;
+      }
+
+      if (!isNaN(maxPrice)) {
+        query += ` AND price <= $${paramIndex}`;
+        countQuery += ` AND price <= $${paramIndex}`;
+        params.push(maxPrice);
+        countParams.push(maxPrice);
+        paramIndex++;
+      }
+
+      // Order by
+      let orderBy = 'name ASC';
+      if (sortBy === 'price-asc') orderBy = 'price ASC';
+      else if (sortBy === 'price-desc') orderBy = 'price DESC';
+      else if (sortBy === 'name-desc') orderBy = 'name DESC';
+      
+      query += ` ORDER BY ${orderBy} LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+      params.push(limit, offset);
+
       // Get total count for metadata
-      const countResult = await pool.query('SELECT COUNT(*) FROM products');
+      const countResult = await pool.query(countQuery, countParams);
       const total = parseInt(countResult.rows[0].count);
 
       // Get paginated products
-      const result = await pool.query(
-        'SELECT * FROM products ORDER BY name ASC LIMIT $1 OFFSET $2',
-        [limit, offset]
-      );
+      const result = await pool.query(query, params);
 
       // Map snake_case to camelCase
       const products = result.rows.map(row => ({
