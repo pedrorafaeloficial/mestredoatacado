@@ -24,6 +24,7 @@ interface StoreContextType {
   fetchProducts: (page: number, limit: number, append?: boolean) => Promise<void>;
   hasMore: boolean;
   totalProducts: number;
+  totalPages: number;
   loading: boolean;
 }
 
@@ -37,6 +38,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   const fetchProducts = async (page: number, limit: number, append = false) => {
     try {
@@ -51,6 +53,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
       
       setTotalProducts(data.total);
+      setTotalPages(data.totalPages);
       setHasMore(page < data.totalPages);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -64,7 +67,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const fetchData = async (retries = 5) => {
       try {
         const [productsRes, categoriesRes, prefixesRes] = await Promise.all([
-          fetch('/api/products?page=1&limit=12'),
+          fetch('/api/products?page=1&limit=6'),
           fetch('/api/categories'),
           fetch('/api/sku-prefixes')
         ]);
@@ -78,6 +81,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (isMounted) {
           setProducts(productsData.items);
           setTotalProducts(productsData.total);
+          setTotalPages(productsData.totalPages);
           setHasMore(1 < productsData.totalPages);
         }
         
@@ -374,6 +378,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       fetchProducts,
       hasMore,
       totalProducts,
+      totalPages,
       loading
     }}>
       {children}

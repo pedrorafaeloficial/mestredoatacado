@@ -231,7 +231,7 @@ async function startServer() {
   app.get("/api/products", requireDb, async (req, res) => {
     try {
       const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 12;
+      const limit = parseInt(req.query.limit as string) || 6;
       const offset = (page - 1) * limit;
 
       // Get total count for metadata

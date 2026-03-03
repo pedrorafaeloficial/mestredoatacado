@@ -9,13 +9,13 @@ import { useStore } from '../context/StoreContext';
 import { Cart } from '../components/Cart';
 
 export function Catalog() {
-  const { products, categories, addToCart, fetchProducts, hasMore, totalProducts } = useStore();
+  const { products, categories, addToCart, fetchProducts, hasMore, totalProducts, totalPages } = useStore();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [isFetchingPage, setIsFetchingPage] = useState(false);
   const [page, setPage] = useState(1);
-  const itemsPerPage = 12;
+  const itemsPerPage = 6;
   
   // Carousel Ref
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -71,15 +71,14 @@ export function Catalog() {
     });
   }, [products, selectedCategory, searchQuery, priceRange, sortBy]);
 
-  // Pagination logic removed in favor of server-side "Load More"
-  
-  const handleLoadMore = async () => {
-    if (isFetchingMore || !hasMore) return;
-    setIsFetchingMore(true);
-    const nextPage = page + 1;
-    await fetchProducts(nextPage, itemsPerPage, true);
-    setPage(nextPage);
-    setIsFetchingMore(false);
+  // Pagination logic
+  const handlePageChange = async (newPage: number) => {
+    if (isFetchingPage || newPage < 1 || newPage > totalPages) return;
+    setIsFetchingPage(true);
+    await fetchProducts(newPage, itemsPerPage, false);
+    setPage(newPage);
+    setIsFetchingPage(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const clearFilters = () => {
@@ -472,24 +471,51 @@ export function Catalog() {
           )}
         </div>
 
-        {/* Load More Button */}
-        {hasMore && !isLoading && (
-          <div className="flex justify-center mb-16">
+        {/* Pagination Controls */}
+        {totalPages > 1 && !isLoading && (
+          <div className="flex justify-center items-center gap-2 mb-16">
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleLoadMore}
-              disabled={isFetchingMore}
-              className="flex items-center gap-2 bg-white border border-zinc-200 text-zinc-900 px-8 py-4 rounded-2xl font-bold shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page === 1 || isFetchingPage}
+              className="p-2 rounded-lg border border-zinc-200 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isFetchingMore ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Carregando...</span>
-                </>
-              ) : (
-                <span>Carregar Mais Produtos</span>
-              )}
+              <ChevronLeft className="w-5 h-5" />
+            </motion.button>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+              // Show limited pages if many
+              if (totalPages > 7) {
+                if (p !== 1 && p !== totalPages && Math.abs(p - page) > 1) {
+                  if (p === 2 || p === totalPages - 1) return <span key={p} className="px-2 text-zinc-400">...</span>;
+                  return null;
+                }
+              }
+
+              return (
+                <motion.button
+                  key={p}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => handlePageChange(p)}
+                  disabled={isFetchingPage}
+                  className={`w-10 h-10 rounded-lg font-bold transition-colors ${
+                    page === p
+                      ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-900/20'
+                      : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100'
+                  }`}
+                >
+                  {p}
+                </motion.button>
+              );
+            })}
+
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page === totalPages || isFetchingPage}
+              className="p-2 rounded-lg border border-zinc-200 hover:bg-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-5 h-5" />
             </motion.button>
           </div>
         )}
