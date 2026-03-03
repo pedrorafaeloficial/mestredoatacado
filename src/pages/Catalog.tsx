@@ -43,8 +43,9 @@ export function Catalog() {
 
   // Fetch products when filters change
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchProducts(1, itemsPerPage, false, {
+    setIsFetchingPage(true);
+    const timer = setTimeout(async () => {
+      await fetchProducts(1, itemsPerPage, false, {
         categoryId: selectedCategory,
         search: searchQuery,
         minPrice: priceRange.min,
@@ -52,6 +53,7 @@ export function Catalog() {
         sortBy: sortBy
       });
       setPage(1);
+      setIsFetchingPage(false);
     }, 300); // Debounce search
 
     return () => clearTimeout(timer);
@@ -254,8 +256,13 @@ export function Catalog() {
                 placeholder="Buscar produtos..."
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-zinc-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all bg-white/50"
+                className="w-full pl-10 pr-12 py-3 rounded-xl border border-zinc-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all bg-white/50"
               />
+              {isFetchingPage && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Loader2 className="w-5 h-5 text-amber-500 animate-spin" />
+                </div>
+              )}
             </div>
             <motion.button
               whileTap={{ scale: 0.95 }}
